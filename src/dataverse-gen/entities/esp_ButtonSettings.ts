@@ -1,0 +1,71 @@
+/* eslint-disable*/
+// Entity esp_ButtonSettings
+export const esp_buttonsettingsMetadata = {
+  typeName: "mscrm.esp_buttonsettings",
+  logicalName: "esp_buttonsettings",
+  collectionName: "esp_buttonsettingses",
+  primaryIdAttribute: "esp_buttonsettingsid",
+  attributeTypes: {
+    // Numeric Types
+    importsequencenumber: "Integer",
+    timezoneruleversionnumber: "Integer",
+    utcconversiontimezonecode: "Integer",
+    versionnumber: "BigInt",
+    // Optionsets
+    statecode: "Optionset",
+    statuscode: "Optionset",
+    // Date Formats
+    createdon: "DateAndTime:UserLocal",
+    modifiedon: "DateAndTime:UserLocal",
+    overriddencreatedon: "DateOnly:UserLocal",
+  },
+  navigation: {
+    createdby: ["mscrm.systemuser"],
+    createdonbehalfby: ["mscrm.systemuser"],
+    modifiedby: ["mscrm.systemuser"],
+    modifiedonbehalfby: ["mscrm.systemuser"],
+    ownerid: ["mscrm.principal"],
+    owningbusinessunit: ["mscrm.businessunit"],
+    owningteam: ["mscrm.team"],
+    owninguser: ["mscrm.systemuser"],
+  },
+};
+
+// Attribute constants
+export const enum esp_ButtonSettingsAttributes {
+  CreatedBy = "createdby",
+  CreatedByName = "createdbyname",
+  CreatedByYomiName = "createdbyyominame",
+  CreatedOn = "createdon",
+  CreatedOnBehalfBy = "createdonbehalfby",
+  CreatedOnBehalfByName = "createdonbehalfbyname",
+  CreatedOnBehalfByYomiName = "createdonbehalfbyyominame",
+  esp_ButtonSettingsId = "esp_buttonsettingsid",
+  esp_Endpoint = "esp_endpoint",
+  esp_IncludeCallingUserinPayload = "esp_includecallinguserinpayload",
+  esp_IncludeEntityLogicalNameinPayload = "esp_includeentitylogicalnameinpayload",
+  esp_IncludeRecordIDinPayload = "esp_includerecordidinpayload",
+  esp_Name = "esp_name",
+  ImportSequenceNumber = "importsequencenumber",
+  ModifiedBy = "modifiedby",
+  ModifiedByName = "modifiedbyname",
+  ModifiedByYomiName = "modifiedbyyominame",
+  ModifiedOn = "modifiedon",
+  ModifiedOnBehalfBy = "modifiedonbehalfby",
+  ModifiedOnBehalfByName = "modifiedonbehalfbyname",
+  ModifiedOnBehalfByYomiName = "modifiedonbehalfbyyominame",
+  OverriddenCreatedOn = "overriddencreatedon",
+  OwnerId = "ownerid",
+  OwnerIdName = "owneridname",
+  OwnerIdType = "owneridtype",
+  OwnerIdYomiName = "owneridyominame",
+  OwningBusinessUnit = "owningbusinessunit",
+  OwningBusinessUnitName = "owningbusinessunitname",
+  OwningTeam = "owningteam",
+  OwningUser = "owninguser",
+  statecode = "statecode",
+  statuscode = "statuscode",
+  TimeZoneRuleVersionNumber = "timezoneruleversionnumber",
+  UTCConversionTimeZoneCode = "utcconversiontimezonecode",
+  VersionNumber = "versionnumber",
+}

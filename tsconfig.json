@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+  /* Visit https://aka.ms/tsconfig.json to read more about this file */
+  /* Basic Options */
+  "module": "es2015",
+  "target": "ES6",
+  "lib": ["es2015","dom"],  
+  "outDir": "../Webresources/js",
+  "rootDir": "src",
+  "moduleResolution": "node",
+  "sourceMap": true,  
+  }
+}
