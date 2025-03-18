@@ -2,7 +2,7 @@
 const path = require("path");
 
 module.exports = {
-  entry: "./src/demo.ts",
+  entry: "./src/index.ts",
   module: {
     rules: [
       {
@@ -16,9 +16,10 @@ module.exports = {
     extensions: [".tsx", ".ts", ".js"],
   },
   output: {
-    path: path.resolve("WebResources"),
-    filename: "LowCodeButton.js",
-    library: ["esp", "LowCodeButton"],
+    path: path.resolve(__dirname, "dist"),
+    filename: "ClientHooks.js",
+    // Set this to your namespace e.g. cds.ClientHooks
+    library: ["LCB"],
     libraryTarget: "var",
   },
 };

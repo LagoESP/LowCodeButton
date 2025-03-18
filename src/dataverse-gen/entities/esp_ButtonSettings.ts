@@ -1,4 +1,5 @@
 /* eslint-disable*/
+import { IEntity } from "dataverse-ify";
 // Entity esp_ButtonSettings
 export const esp_buttonsettingsMetadata = {
   typeName: "mscrm.esp_buttonsettings",
@@ -68,4 +69,147 @@ export const enum esp_ButtonSettingsAttributes {
   TimeZoneRuleVersionNumber = "timezoneruleversionnumber",
   UTCConversionTimeZoneCode = "utcconversiontimezonecode",
   VersionNumber = "versionnumber",
+}
+// Early Bound Interface
+export interface esp_ButtonSettings extends IEntity {
+  /*
+  Created By LookupType Unique identifier of the user who created the record.
+  */
+  createdby?: import("dataverse-ify").EntityReference | null;
+  /*
+   StringType
+  */
+  createdbyname?: string | null;
+  /*
+   StringType
+  */
+  createdbyyominame?: string | null;
+  /*
+  Created On DateTimeType Date and time when the record was created. DateAndTime:UserLocal
+  */
+  createdon?: Date | null;
+  /*
+  Created By (Delegate) LookupType Unique identifier of the delegate user who created the record.
+  */
+  createdonbehalfby?: import("dataverse-ify").EntityReference | null;
+  /*
+   StringType
+  */
+  createdonbehalfbyname?: string | null;
+  /*
+   StringType
+  */
+  createdonbehalfbyyominame?: string | null;
+  /*
+  Button Settings UniqueidentifierType Unique identifier for entity instances
+  */
+  esp_buttonsettingsid?: import("dataverse-ify").Guid | null;
+  /*
+  Endpoint [Required] StringType Endpoint to perform the HTTP Call
+  */
+  esp_endpoint?: string;
+  /*
+  Include Calling User in Payload [Required] BooleanType
+  */
+  esp_includecallinguserinpayload?: boolean;
+  /*
+  Include Entity Logical Name in Payload [Required] BooleanType
+  */
+  esp_includeentitylogicalnameinpayload?: boolean;
+  /*
+  Include Record ID in Payload [Required] BooleanType
+  */
+  esp_includerecordidinpayload?: boolean;
+  /*
+  Button Name [Required] StringType Unique Name of the button. We do not restrict  here, but we do recommend following something like: [Entity]_[Form]_[FlowName] - Account_MainForm_CreateSAPQuote
+  */
+  esp_name?: string;
+  /*
+  Import Sequence Number IntegerType Sequence number of the import that created this record.
+  */
+  importsequencenumber?: number | null;
+  /*
+  Modified By LookupType Unique identifier of the user who modified the record.
+  */
+  modifiedby?: import("dataverse-ify").EntityReference | null;
+  /*
+   StringType
+  */
+  modifiedbyname?: string | null;
+  /*
+   StringType
+  */
+  modifiedbyyominame?: string | null;
+  /*
+  Modified On DateTimeType Date and time when the record was modified. DateAndTime:UserLocal
+  */
+  modifiedon?: Date | null;
+  /*
+  Modified By (Delegate) LookupType Unique identifier of the delegate user who modified the record.
+  */
+  modifiedonbehalfby?: import("dataverse-ify").EntityReference | null;
+  /*
+   StringType
+  */
+  modifiedonbehalfbyname?: string | null;
+  /*
+   StringType
+  */
+  modifiedonbehalfbyyominame?: string | null;
+  /*
+  Record Created On DateTimeType Date and time that the record was migrated. DateOnly:UserLocal
+  */
+  overriddencreatedon?: Date | null;
+  /*
+  Owner OwnerType Owner Id
+  */
+  ownerid?: import("dataverse-ify").EntityReference | null;
+  /*
+   StringType Name of the owner
+  */
+  owneridname?: string | null;
+  /*
+   EntityNameType Owner Id Type
+  */
+  owneridtype?: string | null;
+  /*
+   StringType Yomi name of the owner
+  */
+  owneridyominame?: string | null;
+  /*
+  Owning Business Unit LookupType Unique identifier for the business unit that owns the record
+  */
+  owningbusinessunit?: import("dataverse-ify").EntityReference | null;
+  /*
+   StringType
+  */
+  owningbusinessunitname?: string | null;
+  /*
+  Owning Team LookupType Unique identifier for the team that owns the record.
+  */
+  owningteam?: import("dataverse-ify").EntityReference | null;
+  /*
+  Owning User LookupType Unique identifier for the user that owns the record.
+  */
+  owninguser?: import("dataverse-ify").EntityReference | null;
+  /*
+  Status esp_buttonsettings_esp_buttonsettings_statecode Status of the Button Settings
+  */
+  statecode?: import("../enums/esp_buttonsettings_esp_buttonsettings_statecode").esp_buttonsettings_esp_buttonsettings_statecode | null;
+  /*
+  Status Reason esp_buttonsettings_esp_buttonsettings_statuscode Reason for the status of the Button Settings
+  */
+  statuscode?: import("../enums/esp_buttonsettings_esp_buttonsettings_statuscode").esp_buttonsettings_esp_buttonsettings_statuscode | null;
+  /*
+  Time Zone Rule Version Number IntegerType For internal use only.
+  */
+  timezoneruleversionnumber?: number | null;
+  /*
+  UTC Conversion Time Zone Code IntegerType Time zone code that was in use when the record was created.
+  */
+  utcconversiontimezonecode?: number | null;
+  /*
+  Version Number BigIntType Version Number
+  */
+  versionnumber?: number | null;
 }
