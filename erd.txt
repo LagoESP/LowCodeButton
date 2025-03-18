@@ -1,0 +1,28 @@
+Table esp_language {
+  esp_languageid id [primary key]
+  esp_lcid string [primary key]
+  esp_language string
+  esp_bcp47code string [note: 'Implemented until here']
+}
+
+Table esp_buttonsettings {
+  esp_buttonsettingsid id [primary key]
+  esp_name string
+  esp_endpoint string
+  esp_includecallinguseridinpayload bool
+  esp_includeentitylogicalnameinpayload bool
+  esp_includerecordidinpayload bool [note: 'Implemented until here']
+}
+
+Table esp_buttonadvancedsettings {
+  esp_buttonadvancedsettingsid id [primary key]
+  esp_settingid autonumber
+  esp_settinglanguage id
+  esp_mainbuttonsetting id
+  esp_showconfirmationdialog bool
+}
+
+Ref ConfigLanguage: esp_buttonadvancedsettings.esp_settinglanguage < esp_language.esp_languageid
+
+Ref AdvancedConfigOf: esp_buttonadvancedsettings.esp_mainbuttonsetting < esp_buttonsettings.esp_buttonsettingsid
+
