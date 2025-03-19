@@ -19,7 +19,6 @@ module.exports = {
   output: {
     path: path.resolve(__dirname, "dist"),
     filename: "LowCodeButtonBase.js",
-    // Set this to your namespace e.g. cds.ClientHooks
     library: ["LCB"],
     libraryTarget: "var",
   },
