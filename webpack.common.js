@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const path = require("path");
 
 module.exports = {
@@ -17,7 +18,7 @@ module.exports = {
   },
   output: {
     path: path.resolve(__dirname, "dist"),
-    filename: "ClientHooks.js",
+    filename: "LowCodeButtonBase.js",
     // Set this to your namespace e.g. cds.ClientHooks
     library: ["LCB"],
     libraryTarget: "var",
