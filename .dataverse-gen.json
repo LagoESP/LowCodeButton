@@ -2,8 +2,7 @@
   "entities": [
     "esp_buttonadvancedsetting",
     "esp_buttonsettings",
-    "esp_language",
-    "account"
+    "esp_language"
   ],
   "actions": [],
   "functions": [],
