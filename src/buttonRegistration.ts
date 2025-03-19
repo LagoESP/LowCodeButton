@@ -2,6 +2,7 @@
 /* eslint-disable camelcase */
 import {
   esp_ButtonAdvancedSetting,
+  esp_buttonadvancedsetting_esp_buttonadvancedsetting_esp_executionmode,
   esp_ButtonAdvancedSettingAttributes,
   esp_ButtonSettings,
   esp_LanguageAttributes,
@@ -13,8 +14,6 @@ export class ButtonRegistration {
   static async onClick(formContext: Xrm.FormContext, buttonSettingName: string) {
     // Get the language code, user ID, and entity logical name
     const languageCode = Utils.getLanguageCode();
-    const userId = Utils.getUserID();
-    const entityLogicalName = Utils.getEntityLogicalName(formContext);
     // Check if the button setting and advanced setting exist
     const buttonSettings = (await Utils.getButtonSetting(buttonSettingName)) as esp_ButtonSettings | null;
     if (!buttonSettings) {
@@ -30,28 +29,52 @@ export class ButtonRegistration {
       return;
     }
     if (buttonAdvancedSettings.esp_showconfirmationdialog) {
-      if (buttonAdvancedSettings.esp_confirmationdialogtext == null) {
-        await ExceptionLowCodeButton.showConfirmationDialogError();
+      const confirmation = await Utils.openConfirmationDialogBeforeRun(buttonAdvancedSettings);
+      if (!confirmation) {
         return;
-      } else {
-        const confirmation = await ButtonRegistration.showConfirmationDialog(buttonAdvancedSettings, entityLogicalName);
-        if (!confirmation) {
-          return;
-        }
       }
     }
-    alert("Button clicked!");
+    await (buttonAdvancedSettings.esp_executionmode ===
+    esp_buttonadvancedsetting_esp_buttonadvancedsetting_esp_executionmode.Async
+      ? this.executeAsync(formContext, buttonSettings, buttonAdvancedSettings)
+      : this.executeSync(formContext, buttonSettings, buttonAdvancedSettings));
   }
 
-  static async showConfirmationDialog(buttonAdvancedSettings: esp_ButtonAdvancedSetting, entityLogicalName: string) {
-    const confirmStrings: Xrm.Navigation.ConfirmStrings = {
-      cancelButtonLabel: buttonAdvancedSettings.esp_confirmationdialogcancellabel ?? "",
-      confirmButtonLabel: buttonAdvancedSettings.esp_confirmationdialogconfirmlabel ?? "",
-      subtitle: buttonAdvancedSettings.esp_confirmationdialogsubtitle ?? "",
-      text: buttonAdvancedSettings.esp_confirmationdialogtext ?? "",
-      title: buttonAdvancedSettings.esp_confirmationdialogtitle!,
-    };
-    const result = await Xrm.Navigation.openConfirmDialog(confirmStrings);
-    return result.confirmed;
+  static async executeAsync(
+    formContext: Xrm.FormContext,
+    buttonSetting: esp_ButtonSettings,
+    buttonAdvancedSetting: esp_ButtonAdvancedSetting,
+  ) {
+    if (!buttonSetting.esp_endpoint) {
+      await ExceptionLowCodeButton.noEndpointError();
+      return;
+    }
+    if (buttonAdvancedSetting.esp_asyncformnotification) {
+      await Utils.asyncFormNotification(formContext, buttonAdvancedSetting);
+    }
+    console.log("Executing async call to " + buttonSetting.esp_endpoint);
+    let payload = {};
+    if (buttonSetting.esp_includeentitylogicalnameinpayload) {
+      payload = { ...payload, entityLogicalName: Utils.getEntityLogicalName(formContext) };
+    }
+    if (buttonSetting.esp_includerecordidinpayload) {
+      payload = { ...payload, recordId: Utils.getRecordId(formContext) };
+    }
+    if (buttonSetting.esp_includecallinguserinpayload) {
+      payload = { ...payload, userId: Utils.getUserID() };
+    }
+    void Utils.makeRequest("POST", buttonSetting.esp_endpoint, payload).catch((error) => {
+      ExceptionLowCodeButton.showFormNotificationGenericError("Error during HTTP Call", error.message);
+      ExceptionLowCodeButton.clearFormNotification(formContext);
+      return;
+    });
+  }
+
+  static async executeSync(
+    formContext: Xrm.FormContext,
+    buttonSetting: esp_ButtonSettings,
+    buttonAdvancedSetting: esp_ButtonAdvancedSetting,
+  ) {
+    console.log("Executing sync call..." + buttonSetting.esp_endpoint);
   }
 }

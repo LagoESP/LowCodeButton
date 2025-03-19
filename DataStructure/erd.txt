@@ -20,9 +20,34 @@ Table esp_buttonadvancedsettings {
   esp_settinglanguage id
   esp_mainbuttonsetting id
   esp_showconfirmationdialog bool
+  esp_executionmode choice [note: 'Sync or Async', default: null, not null]
+  esp_confirmationdialogtitle string
+  esp_confirmationdialogsubtitle string
+  esp_confirmationdialogtext string [not null]
+  esp_confirmationdialogconfirmlabel string
+  esp_confirmationdialogcancellabel string
+  esp_asyncformnotification bool [not null, default: true]
+  esp_asyncformnotificationtext string
+  esp_syncformnotification bool [not null, default: false]
+  esp_syncformnotificationtext string
+  esp_syncspinner bool [not null, default: true]
+  esp_syncspinnertext string [null]
+  esp_syncsuccessformnotification bool [default: true]
+  esp_syncsuccessformnotificationtext string
+  esp_syncconfirmationbox bool [default: false]
+  esp_syncconfirmationboxtitle string
+  esp_syncconfirmationboxtext string [not null]
+  esp_syncconfirmationboxconfirmlabel string
+  esp_syncconfirmationboxredirect bool [default: false]
+  esp_syncconfirmationboxredirecttitle string
+  esp_syncconfirmationboxredirectsubtitle string
+  esp_syncconfirmationboxredirecttext string [not null]
+  esp_syncconfirmationboxredirectconfirmlabel string
+  esp_syncconfirmationboxredirectcancellabel string
+  esp_syncconfirmationboxredirectmode choice [not null, note: 'Current tab or New tab', default: 'New tab']
+  esp_syncrefreshform bool [not null, default: false, note: 'IMPORTANT! If Confirmation with redirect + Redirect on existing tab, this flag must always be false.']
 }
 
 Ref ConfigLanguage: esp_buttonadvancedsettings.esp_settinglanguage < esp_language.esp_languageid
 
 Ref AdvancedConfigOf: esp_buttonadvancedsettings.esp_mainbuttonsetting < esp_buttonsettings.esp_buttonsettingsid
-

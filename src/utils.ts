@@ -1,14 +1,22 @@
+/* eslint-disable camelcase */
+import { esp_ButtonAdvancedSetting } from "./dataverse-gen";
+import { ExceptionLowCodeButton } from "./exceptions";
+
 export class Utils {
   static getLanguageCode(): number {
     return Xrm.Utility.getGlobalContext().userSettings.languageId;
   }
 
   static getUserID(): string {
-    return Xrm.Utility.getGlobalContext().userSettings.userId;
+    return Xrm.Utility.getGlobalContext().userSettings.userId.replace("{", "").replace("}", "").toLowerCase();
   }
 
   static getEntityLogicalName(formContext: Xrm.FormContext): string {
     return formContext.data.entity.getEntityName();
+  }
+
+  static getRecordId(formContext: Xrm.FormContext): string {
+    return formContext.data.entity.getId().replace("{", "").replace("}", "").toLowerCase();
   }
 
   static async getButtonSetting(buttonSettingName: string): Promise<unknown> {
@@ -103,5 +111,36 @@ export class Utils {
     };
 
     return fetch(url, options);
+  }
+
+  static async openConfirmationDialogBeforeRun(buttonAdvancedSettings: esp_ButtonAdvancedSetting) {
+    if (buttonAdvancedSettings.esp_confirmationdialogtext == null) {
+      await ExceptionLowCodeButton.showConfirmationDialogError();
+      return;
+    }
+    const confirmStrings: Xrm.Navigation.ConfirmStrings = {
+      cancelButtonLabel: buttonAdvancedSettings.esp_confirmationdialogcancellabel ?? "",
+      confirmButtonLabel: buttonAdvancedSettings.esp_confirmationdialogconfirmlabel ?? "",
+      subtitle: buttonAdvancedSettings.esp_confirmationdialogsubtitle ?? "",
+      text: buttonAdvancedSettings.esp_confirmationdialogtext ?? "",
+      title: buttonAdvancedSettings.esp_confirmationdialogtitle!,
+    };
+    const result = await Xrm.Navigation.openConfirmDialog(confirmStrings);
+    return result.confirmed;
+  }
+
+  static async asyncFormNotification(formContext: Xrm.FormContext, buttonAdvancedSettings: esp_ButtonAdvancedSetting) {
+    if (buttonAdvancedSettings.esp_asyncformnotificationtext == null) {
+      await ExceptionLowCodeButton.showFormNotificationMissingTextError();
+      return;
+    }
+    formContext.ui.setFormNotification(
+      buttonAdvancedSettings.esp_asyncformnotificationtext,
+      "INFO",
+      "LowCodeButtonAsyncNotification",
+    );
+    setTimeout(() => {
+      formContext.ui.clearFormNotification("LowCodeButtonAsyncNotification");
+    }, 5000);
   }
 }
