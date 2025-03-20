@@ -25,7 +25,7 @@ export const esp_buttonadvancedsettingMetadata = {
   navigation: {
     createdby: ["mscrm.systemuser"],
     createdonbehalfby: ["mscrm.systemuser"],
-    esp_MainButtonSetting: ["mscrm.esp_buttonsettings"],
+    esp_MainButtonSetting: ["mscrm.esp_buttonsetting"],
     esp_SettingLanguage: ["mscrm.esp_language"],
     modifiedby: ["mscrm.systemuser"],
     modifiedonbehalfby: ["mscrm.systemuser"],
@@ -168,7 +168,7 @@ export interface esp_ButtonAdvancedSetting extends IEntity {
   */
   esp_executionmode?: import("../enums/esp_buttonadvancedsetting_esp_buttonadvancedsetting_esp_executionmode").esp_buttonadvancedsetting_esp_buttonadvancedsetting_esp_executionmode | null;
   /*
-  Main Button Setting [Required] LookupType Main button setting where this advanced setting is related to 
+  Main Button Setting [Required] LookupType Lookup to Main Button Setting
   */
   esp_mainbuttonsetting?: import("dataverse-ify").EntityReference;
   /*

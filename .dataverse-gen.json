@@ -1,7 +1,7 @@
 {
   "entities": [
     "esp_buttonadvancedsetting",
-    "esp_buttonsettings",
+    "esp_buttonsetting",
     "esp_language"
   ],
   "actions": [],

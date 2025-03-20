@@ -5,17 +5,19 @@ Table esp_language {
   esp_bcp47code string [note: 'Implemented until here']
 }
 
-Table esp_buttonsettings {
-  esp_buttonsettingsid id [primary key]
+Table esp_buttonsetting {
+  esp_buttonsettingid id [primary key]
   esp_name string
   esp_endpoint string
   esp_includecallinguseridinpayload bool
   esp_includeentitylogicalnameinpayload bool
   esp_includerecordidinpayload bool [note: 'Implemented until here']
+  esp_savebeforerunning bool [not null, default: true]
+  esp_refreshformwhenapicallends bool [not null, default: false]
 }
 
-Table esp_buttonadvancedsettings {
-  esp_buttonadvancedsettingsid id [primary key]
+Table esp_buttonadvancedsetting {
+  esp_buttonadvancedsettingid id [primary key]
   esp_settingid autonumber
   esp_settinglanguage id
   esp_mainbuttonsetting id
@@ -45,9 +47,8 @@ Table esp_buttonadvancedsettings {
   esp_syncconfirmationboxredirectconfirmlabel string
   esp_syncconfirmationboxredirectcancellabel string
   esp_syncconfirmationboxredirectmode choice [not null, note: 'Current tab or New tab', default: 'New tab']
-  esp_syncrefreshform bool [not null, default: false, note: 'IMPORTANT! If Confirmation with redirect + Redirect on existing tab, this flag must always be false.']
-}
+  }
 
-Ref ConfigLanguage: esp_buttonadvancedsettings.esp_settinglanguage < esp_language.esp_languageid
+Ref ConfigLanguage: esp_buttonadvancedsetting.esp_settinglanguage < esp_language.esp_languageid
 
-Ref AdvancedConfigOf: esp_buttonadvancedsettings.esp_mainbuttonsetting < esp_buttonsettings.esp_buttonsettingsid
+Ref AdvancedConfigOf: esp_buttonadvancedsetting.esp_mainbuttonsetting < esp_buttonsetting.esp_buttonsettingid

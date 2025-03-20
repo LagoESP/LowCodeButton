@@ -2,7 +2,7 @@
 import { esp_ButtonAdvancedSetting } from "./dataverse-gen";
 import { ExceptionLowCodeButton } from "./exceptions";
 
-export class Utils {
+export class Helper {
   static getLanguageCode(): number {
     return Xrm.Utility.getGlobalContext().userSettings.languageId;
   }
@@ -21,23 +21,25 @@ export class Utils {
 
   static async getButtonSetting(buttonSettingName: string): Promise<unknown> {
     const fetchXml = `
-        <fetch top="1">
-        <entity name="esp_buttonsettings">
-            <attribute name="esp_buttonsettingsid" />
-            <attribute name="esp_endpoint" />
-            <attribute name="esp_includecallinguserinpayload" />
-            <attribute name="esp_includeentitylogicalnameinpayload" />
-            <attribute name="esp_includerecordidinpayload" />
-            <attribute name="esp_name" />
-            <filter type="and">
-            <condition attribute="esp_name" operator="eq" value="${buttonSettingName}" />
-            </filter>
+      <fetch top="1">
+        <entity name="esp_buttonsetting">
+          <attribute name="esp_buttonsettingid" />
+          <attribute name="esp_endpoint" />
+          <attribute name="esp_includecallinguseridinpayload" />
+          <attribute name="esp_includeentitylogicalnameinpayload" />
+          <attribute name="esp_includerecordidinpayload" />
+          <attribute name="esp_buttonname" />
+          <attribute name="esp_savebeforerunning" />
+          <attribute name="esp_refreshformwhenapicallends" />
+          <filter type="and">
+            <condition attribute="esp_buttonname" operator="eq" value="${buttonSettingName}" />
+          </filter>
         </entity>
-        </fetch>
+      </fetch>
     `;
     const query = `?fetchXml=${encodeURIComponent(fetchXml)}`;
-    const url = Xrm.Utility.getGlobalContext().getClientUrl() + "/api/data/v9.1/esp_buttonsettingses" + query;
-    const response = await Utils.makeRequest("GET", url);
+    const url = Xrm.Utility.getGlobalContext().getClientUrl() + "/api/data/v9.1/esp_buttonsettings" + query;
+    const response = await Helper.makeRequest("GET", url);
     const data = await response.json();
     return data.value[0];
   }
@@ -90,7 +92,7 @@ export class Utils {
     `;
     const query = `?fetchXml=${encodeURIComponent(fetchXml)}`;
     const url = Xrm.Utility.getGlobalContext().getClientUrl() + "/api/data/v9.1/esp_buttonadvancedsettings" + query;
-    const response = await Utils.makeRequest("GET", url);
+    const response = await Helper.makeRequest("GET", url);
     const data = await response.json();
     return data.value[0];
   }

@@ -1,11 +1,11 @@
 /* eslint-disable*/
 import { IEntity } from "dataverse-ify";
-// Entity esp_ButtonSettings
-export const esp_buttonsettingsMetadata = {
-  typeName: "mscrm.esp_buttonsettings",
-  logicalName: "esp_buttonsettings",
-  collectionName: "esp_buttonsettingses",
-  primaryIdAttribute: "esp_buttonsettingsid",
+// Entity esp_ButtonSetting
+export const esp_buttonsettingMetadata = {
+  typeName: "mscrm.esp_buttonsetting",
+  logicalName: "esp_buttonsetting",
+  collectionName: "esp_buttonsettings",
+  primaryIdAttribute: "esp_buttonsettingid",
   attributeTypes: {
     // Numeric Types
     importsequencenumber: "Integer",
@@ -33,7 +33,7 @@ export const esp_buttonsettingsMetadata = {
 };
 
 // Attribute constants
-export const enum esp_ButtonSettingsAttributes {
+export const enum esp_ButtonSettingAttributes {
   CreatedBy = "createdby",
   CreatedByName = "createdbyname",
   CreatedByYomiName = "createdbyyominame",
@@ -41,12 +41,14 @@ export const enum esp_ButtonSettingsAttributes {
   CreatedOnBehalfBy = "createdonbehalfby",
   CreatedOnBehalfByName = "createdonbehalfbyname",
   CreatedOnBehalfByYomiName = "createdonbehalfbyyominame",
-  esp_ButtonSettingsId = "esp_buttonsettingsid",
+  esp_ButtonName = "esp_buttonname",
+  esp_ButtonSettingId = "esp_buttonsettingid",
   esp_Endpoint = "esp_endpoint",
-  esp_IncludeCallingUserinPayload = "esp_includecallinguserinpayload",
+  esp_IncludeCallingUserIDinPayload = "esp_includecallinguseridinpayload",
   esp_IncludeEntityLogicalNameinPayload = "esp_includeentitylogicalnameinpayload",
   esp_IncludeRecordIDinPayload = "esp_includerecordidinpayload",
-  esp_Name = "esp_name",
+  esp_RefreshFormwhenAPICallEnds = "esp_refreshformwhenapicallends",
+  esp_SaveBeforeRunning = "esp_savebeforerunning",
   ImportSequenceNumber = "importsequencenumber",
   ModifiedBy = "modifiedby",
   ModifiedByName = "modifiedbyname",
@@ -71,7 +73,7 @@ export const enum esp_ButtonSettingsAttributes {
   VersionNumber = "versionnumber",
 }
 // Early Bound Interface
-export interface esp_ButtonSettings extends IEntity {
+export interface esp_ButtonSetting extends IEntity {
   /*
   Created By LookupType Unique identifier of the user who created the record.
   */
@@ -101,29 +103,37 @@ export interface esp_ButtonSettings extends IEntity {
   */
   createdonbehalfbyyominame?: string | null;
   /*
-  Button Settings UniqueidentifierType Unique identifier for entity instances
+  Button Name [Required] StringType Button Name (Unique, alternate key)
   */
-  esp_buttonsettingsid?: import("dataverse-ify").Guid | null;
+  esp_buttonname?: string;
   /*
-  Endpoint [Required] StringType Endpoint to perform the HTTP Call
+  Button Setting UniqueidentifierType Unique identifier for entity instances
+  */
+  esp_buttonsettingid?: import("dataverse-ify").Guid | null;
+  /*
+  Endpoint [Required] StringType Endpoint to call the Power Automate Flow URL / Logic App
   */
   esp_endpoint?: string;
   /*
-  Include Calling User in Payload [Required] BooleanType
+  Include Calling User ID in Payload [Required] BooleanType Include Calling User ID in Payload
   */
-  esp_includecallinguserinpayload?: boolean;
+  esp_includecallinguseridinpayload?: boolean;
   /*
-  Include Entity Logical Name in Payload [Required] BooleanType
+  Include Entity Logical Name in Payload [Required] BooleanType Include Entity Logical Name in Payload
   */
   esp_includeentitylogicalnameinpayload?: boolean;
   /*
-  Include Record ID in Payload [Required] BooleanType
+  Include Record ID in Payload [Required] BooleanType Include Record ID in Payload
   */
   esp_includerecordidinpayload?: boolean;
   /*
-  Button Name [Required] StringType Unique Name of the button. We do not restrict  here, but we do recommend following something like: [Entity]_[Form]_[FlowName] - Account_MainForm_CreateSAPQuote
+  Refresh Form when API Call Ends [Required] BooleanType
   */
-  esp_name?: string;
+  esp_refreshformwhenapicallends?: boolean;
+  /*
+  Save Before Running [Required] BooleanType Saves the form before running, so Power Automate can fetch the freshest details.
+  */
+  esp_savebeforerunning?: boolean;
   /*
   Import Sequence Number IntegerType Sequence number of the import that created this record.
   */
@@ -193,13 +203,13 @@ export interface esp_ButtonSettings extends IEntity {
   */
   owninguser?: import("dataverse-ify").EntityReference | null;
   /*
-  Status esp_buttonsettings_esp_buttonsettings_statecode Status of the Button Settings
+  Status esp_buttonsetting_esp_buttonsetting_statecode Status of the Button Setting
   */
-  statecode?: import("../enums/esp_buttonsettings_esp_buttonsettings_statecode").esp_buttonsettings_esp_buttonsettings_statecode | null;
+  statecode?: import("../enums/esp_buttonsetting_esp_buttonsetting_statecode").esp_buttonsetting_esp_buttonsetting_statecode | null;
   /*
-  Status Reason esp_buttonsettings_esp_buttonsettings_statuscode Reason for the status of the Button Settings
+  Status Reason esp_buttonsetting_esp_buttonsetting_statuscode Reason for the status of the Button Setting
   */
-  statuscode?: import("../enums/esp_buttonsettings_esp_buttonsettings_statuscode").esp_buttonsettings_esp_buttonsettings_statuscode | null;
+  statuscode?: import("../enums/esp_buttonsetting_esp_buttonsetting_statuscode").esp_buttonsetting_esp_buttonsetting_statuscode | null;
   /*
   Time Zone Rule Version Number IntegerType For internal use only.
   */

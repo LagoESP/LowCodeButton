@@ -1,7 +1,7 @@
 {
-  "name": "lcb",
+  "name": "LowCodeButton",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "LowCodeButton.js",
 "scripts": {
     "build": "webpack --config webpack.dev.js",
     "start": "webpack --config webpack.dev.js --watch",
@@ -11,15 +11,15 @@
 },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/LagoESP/LCB.git"
+    "url": "git+https://github.com/LagoESP/LowCodeButton.git"
   },
   "keywords": [],
   "author": "José Martínez Lago & SCN",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/LagoESP/LCB/issues"
+    "url": "https://github.com/LagoESP/LowCodeButton/issues"
   },
-  "homepage": "https://github.com/LagoESP/LCB#readme",
+  "homepage": "https://github.com/LagoESP/LowCodeButton#readme",
   "description": "",
   "dependencies": {
     "dataverse-auth": "^2.0.8",
