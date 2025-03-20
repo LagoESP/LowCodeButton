@@ -1,6 +1,11 @@
 /* eslint-disable camelcase */
-import { esp_ButtonAdvancedSetting } from "./dataverse-gen";
+import {
+  esp_ButtonAdvancedSetting,
+  esp_buttonadvancedsetting_esp_buttonadvancedsetting_esp_syncconfirmationboxredirectmode,
+  esp_ButtonSetting,
+} from "./dataverse-gen";
 import { ExceptionLowCodeButton } from "./exceptions";
+import { RedirectResponse } from "./models";
 
 export class Helper {
   static getLanguageCode(): number {
@@ -97,6 +102,19 @@ export class Helper {
     return data.value[0];
   }
 
+  static getPayload(formContext: Xrm.FormContext, buttonSetting: esp_ButtonSetting): Record<string, unknown> {
+    let payload = {};
+    if (buttonSetting.esp_includeentitylogicalnameinpayload) {
+      payload = { ...payload, entityLogicalName: Helper.getEntityLogicalName(formContext) };
+    }
+    if (buttonSetting.esp_includerecordidinpayload) {
+      payload = { ...payload, recordId: Helper.getRecordId(formContext) };
+    }
+    if (buttonSetting.esp_includecallinguserinpayload) {
+      payload = { ...payload, userId: Helper.getUserID() };
+    }
+    return payload;
+  }
   static async makeRequest(method: string, url: string, body?: unknown): Promise<Response> {
     const headers = {
       "Content-Type": "application/json",
@@ -115,34 +133,163 @@ export class Helper {
     return fetch(url, options);
   }
 
-  static async openConfirmationDialogBeforeRun(buttonAdvancedSettings: esp_ButtonAdvancedSetting) {
-    if (buttonAdvancedSettings.esp_confirmationdialogtext == null) {
-      await ExceptionLowCodeButton.showConfirmationDialogError();
-      return;
+  static async openConfirmationDialogBeforeRun(buttonAdvancedSetting: esp_ButtonAdvancedSetting): Promise<boolean> {
+    if (buttonAdvancedSetting.esp_confirmationdialogtext == null) {
+      await ExceptionLowCodeButton.showFormNotificationGenericError(
+        "Confirmation Dialog Text Error",
+        "The confirmation dialog text is empty! Please fill it on your configuration settings.",
+      );
+      return false;
     }
     const confirmStrings: Xrm.Navigation.ConfirmStrings = {
-      cancelButtonLabel: buttonAdvancedSettings.esp_confirmationdialogcancellabel ?? "",
-      confirmButtonLabel: buttonAdvancedSettings.esp_confirmationdialogconfirmlabel ?? "",
-      subtitle: buttonAdvancedSettings.esp_confirmationdialogsubtitle ?? "",
-      text: buttonAdvancedSettings.esp_confirmationdialogtext ?? "",
-      title: buttonAdvancedSettings.esp_confirmationdialogtitle!,
+      cancelButtonLabel: buttonAdvancedSetting.esp_confirmationdialogcancellabel ?? "",
+      confirmButtonLabel: buttonAdvancedSetting.esp_confirmationdialogconfirmlabel ?? "",
+      subtitle: buttonAdvancedSetting.esp_confirmationdialogsubtitle ?? "",
+      text: buttonAdvancedSetting.esp_confirmationdialogtext ?? "",
+      title: buttonAdvancedSetting.esp_confirmationdialogtitle!,
     };
     const result = await Xrm.Navigation.openConfirmDialog(confirmStrings);
     return result.confirmed;
   }
 
-  static async asyncFormNotification(formContext: Xrm.FormContext, buttonAdvancedSettings: esp_ButtonAdvancedSetting) {
-    if (buttonAdvancedSettings.esp_asyncformnotificationtext == null) {
-      await ExceptionLowCodeButton.showFormNotificationMissingTextError();
+  static async openSuccessDialogSync(buttonAdvancedSetting: esp_ButtonAdvancedSetting): Promise<boolean> {
+    if (buttonAdvancedSetting.esp_syncconfirmationboxtext == null) {
+      await ExceptionLowCodeButton.showFormNotificationGenericError(
+        "Sync Confirmation Box Text Error",
+        "The sync confirmation box text is empty! Please fill it on your configuration settings.",
+      );
+      return false;
+    }
+    const confirmStrings: Xrm.Navigation.ConfirmStrings = {
+      confirmButtonLabel: buttonAdvancedSetting.esp_syncconfirmationboxconfirmlabel ?? undefined,
+      text: buttonAdvancedSetting.esp_syncconfirmationboxtext ?? undefined,
+      title: buttonAdvancedSetting.esp_syncconfirmationboxtitle!,
+    };
+    const result = await Xrm.Navigation.openAlertDialog(confirmStrings);
+    return result.confirmed;
+  }
+
+  static async openSuccessDialogRedirect(
+    formContext: Xrm.FormContext,
+    buttonSetting: esp_ButtonSetting,
+    buttonAdvancedSetting: esp_ButtonAdvancedSetting,
+    response: RedirectResponse,
+  ) {
+    if (buttonAdvancedSetting.esp_syncconfirmationboxredirecttext == null) {
+      await ExceptionLowCodeButton.showFormNotificationGenericError(
+        "Sync Confirmation Box Redirect Text Error",
+        "The sync confirmation box redirect text is empty! Please fill it on your configuration settings.",
+      );
+    }
+    const confirmStrings: Xrm.Navigation.ConfirmStrings = {
+      cancelButtonLabel: buttonAdvancedSetting.esp_syncconfirmationboxredirectcancellabel ?? undefined,
+      confirmButtonLabel: buttonAdvancedSetting.esp_syncconfirmationboxredirectconfirmlabel ?? undefined,
+      text: buttonAdvancedSetting.esp_syncconfirmationboxredirecttext!,
+      subtitle: buttonAdvancedSetting.esp_syncconfirmationboxredirectsubtitle ?? undefined,
+      title: buttonAdvancedSetting.esp_syncconfirmationboxredirecttitle ?? undefined,
+    };
+    Xrm.Navigation.openConfirmDialog(confirmStrings).then((result) => {
+      if (result.confirmed) {
+        console.log("User confirmed the dialog, redirecting...");
+        if (
+          buttonAdvancedSetting.esp_syncconfirmationboxredirectmode ===
+          esp_buttonadvancedsetting_esp_buttonadvancedsetting_esp_syncconfirmationboxredirectmode.CurrentTab
+        ) {
+          window.open(response.redirectUri, "_self")!.focus();
+        } else {
+          window.open(response.redirectUri, "_blank")!.focus();
+        }
+      } else {
+        console.log("User cancelled the dialog, checking if we should refresh the form");
+        this.reloadForm(formContext, buttonSetting, buttonAdvancedSetting);
+      }
+    });
+  }
+
+  static reloadForm(
+    formContext: Xrm.FormContext,
+    buttonSetting: esp_ButtonSetting,
+    buttonAdvancedSetting: esp_ButtonAdvancedSetting,
+  ) {
+    if (
+      buttonSetting.esp_refreshformwhenapicallends &&
+      !(
+        buttonAdvancedSetting.esp_syncconfirmationboxredirect &&
+        buttonAdvancedSetting.esp_syncconfirmationboxredirectmode ===
+          esp_buttonadvancedsetting_esp_buttonadvancedsetting_esp_syncconfirmationboxredirectmode.CurrentTab
+      )
+    ) {
+      formContext.data.refresh(false);
+    }
+  }
+
+  static async asyncFormNotification(formContext: Xrm.FormContext, buttonAdvancedSetting: esp_ButtonAdvancedSetting) {
+    if (buttonAdvancedSetting.esp_asyncformnotificationtext == null) {
+      await ExceptionLowCodeButton.showFormNotificationGenericError(
+        "Async Form Notification Text Error",
+        "The async form notification text is empty! Please fill it on your configuration settings.",
+      );
       return;
     }
     formContext.ui.setFormNotification(
-      buttonAdvancedSettings.esp_asyncformnotificationtext,
+      buttonAdvancedSetting.esp_asyncformnotificationtext,
       "INFO",
-      "LowCodeButtonAsyncNotification",
+      "LowCodeButtonFormNotification",
     );
     setTimeout(() => {
-      formContext.ui.clearFormNotification("LowCodeButtonAsyncNotification");
+      formContext.ui.clearFormNotification("LowCodeButtonFormNotification");
     }, 5000);
+  }
+
+  static async clearFormNotification(formContext: Xrm.FormContext) {
+    formContext.ui.clearFormNotification("LowCodeButtonFormNotification");
+  }
+
+  static async syncFormNotification(formContext: Xrm.FormContext, buttonAdvancedSetting: esp_ButtonAdvancedSetting) {
+    if (buttonAdvancedSetting.esp_syncformnotificationtext == null) {
+      await ExceptionLowCodeButton.showFormNotificationGenericError(
+        "Sync Form Notification Text Error",
+        "The sync form notification text is empty! Please fill it on your configuration settings.",
+      );
+      return;
+    }
+    formContext.ui.setFormNotification(
+      buttonAdvancedSetting.esp_syncformnotificationtext,
+      "INFO",
+      "LowCodeButtonFormNotification",
+    );
+    setTimeout(() => {
+      formContext.ui.clearFormNotification("LowCodeButtonFormNotification");
+    }, 120000);
+  }
+
+  static async showSuccessFormNotification(
+    formContext: Xrm.FormContext,
+    buttonAdvancedSetting: esp_ButtonAdvancedSetting,
+  ) {
+    if (buttonAdvancedSetting.esp_syncsuccessformnotificationtext == null) {
+      await ExceptionLowCodeButton.showFormNotificationGenericError(
+        "Success Form Notification Text Error",
+        "The success form notification text is empty! Please fill it on your configuration settings.",
+      );
+      return;
+    }
+    formContext.ui.setFormNotification(
+      buttonAdvancedSetting.esp_syncsuccessformnotificationtext,
+      "INFO",
+      "LowCodeButtonFormNotification",
+    );
+    setTimeout(() => {
+      formContext.ui.clearFormNotification("LowCodeButtonFormNotification");
+    }, 5000);
+  }
+
+  static clearSyncNotifications(formContext: Xrm.FormContext, buttonAdvancedSetting: esp_ButtonAdvancedSetting) {
+    if (buttonAdvancedSetting.esp_syncformnotification) {
+      Helper.clearFormNotification(formContext);
+    }
+    if (buttonAdvancedSetting.esp_syncspinner) {
+      Xrm.Utility.closeProgressIndicator();
+    }
   }
 }
