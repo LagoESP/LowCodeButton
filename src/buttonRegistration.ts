@@ -49,10 +49,6 @@ export class ButtonRegistration {
       await ExceptionLowCodeButton.noEndpointError();
       return;
     }
-    if (buttonAdvancedSetting.esp_asyncformnotification) {
-      await Utils.asyncFormNotification(formContext, buttonAdvancedSetting);
-    }
-    console.log("Executing async call to " + buttonSetting.esp_endpoint);
     let payload = {};
     if (buttonSetting.esp_includeentitylogicalnameinpayload) {
       payload = { ...payload, entityLogicalName: Utils.getEntityLogicalName(formContext) };
@@ -62,6 +58,10 @@ export class ButtonRegistration {
     }
     if (buttonSetting.esp_includecallinguserinpayload) {
       payload = { ...payload, userId: Utils.getUserID() };
+    }
+    console.log("Executing async call to " + buttonSetting.esp_endpoint);
+    if (buttonAdvancedSetting.esp_asyncformnotification) {
+      await Utils.asyncFormNotification(formContext, buttonAdvancedSetting);
     }
     void Utils.makeRequest("POST", buttonSetting.esp_endpoint, payload).catch((error) => {
       ExceptionLowCodeButton.showFormNotificationGenericError("Error during HTTP Call", error.message);
