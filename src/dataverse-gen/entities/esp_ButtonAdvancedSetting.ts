@@ -156,9 +156,9 @@ export interface esp_ButtonAdvancedSetting extends IEntity {
   */
   esp_confirmationdialogsubtitle?: string | null;
   /*
-  Confirmation Dialog Text StringType
+  Confirmation Dialog Text [Required] StringType
   */
-  esp_confirmationdialogtext?: string | null;
+  esp_confirmationdialogtext?: string;
   /*
   Confirmation Dialog Title StringType
   */

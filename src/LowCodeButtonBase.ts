@@ -6,6 +6,30 @@ import { ButtonHelper } from "./Helpers/BaseButtonHelper";
 import { ErrorMessageResponse, RedirectResponse } from "./Models/BaseButtonResponseModels";
 
 export class ButtonRegistration {
+  static determineContext(control: any): 'form' | 'grid' | 'subgrid' | 'unknown' {
+    // Check if control is a form context
+    if ((control as Xrm.FormContext).data) {
+        alert('The control is on a main form.');
+        return 'form';
+    }
+    // Check if control is a grid control
+    else if ((control as Xrm.Controls.GridControl).getGrid) {
+        // Differentiate between main grid and subgrid
+        if (control.getParent && control.getParent()) {
+            alert('The control is on a subgrid.');
+            return 'subgrid';
+        } else {
+            alert('The control is on a main grid.');
+            return 'grid';
+        }
+    }
+    alert('Unknown context.');
+    return 'unknown';
+}
+
+
+
+
   static async onClick(formContext: Xrm.FormContext, buttonSettingName: string) {
     // Create a buttonHelper instance with the form context
     const buttonHelper = new ButtonHelper(formContext);
