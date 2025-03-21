@@ -1,46 +1,48 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable camelcase */
-import {
-  esp_ButtonAdvancedSetting,
-  esp_buttonadvancedsetting_esp_buttonadvancedsetting_esp_executionmode,
-  esp_buttonadvancedsetting_esp_buttonadvancedsetting_esp_syncconfirmationboxredirectmode,
-  esp_ButtonSetting,
-} from "./dataverse-gen";
-import { ExceptionLowCodeButton } from "./exceptions";
-import { Helper } from "./helper";
-import { ErrorMessageResponse, RedirectResponse } from "./models";
+import { esp_buttonadvancedsetting_esp_buttonadvancedsetting_esp_executionmode } from "./dataverse-gen";
+import { ExceptionLowCodeButton } from "./Exceptions/BaseButtonException";
+import { ButtonHelper } from "./Helpers/BaseButtonHelper";
+import { ErrorMessageResponse, RedirectResponse } from "./Models/BaseButtonResponseModels";
 
 export class ButtonRegistration {
   static async onClick(formContext: Xrm.FormContext, buttonSettingName: string) {
-    // Get the language code, user ID, and entity logical name
-    const languageCode = Helper.getLanguageCode();
-    // Check if the button setting and advanced setting exist
-    const buttonSetting = (await Helper.getButtonSetting(buttonSettingName)) as esp_ButtonSetting | null;
+    // Create a buttonHelper instance with the form context
+    const buttonHelper = new ButtonHelper(formContext);
+
+    // Get language code and fetch the button setting
+    const languageCode = buttonHelper.getLanguageCode();
+    const buttonSetting = await buttonHelper.getButtonSetting(buttonSettingName);
     if (!buttonSetting) {
       ExceptionLowCodeButton.buttonSettingNotFound(buttonSettingName);
       return;
     }
-    const buttonAdvancedSettings = (await Helper.getButtonAdvancedSetting(
+
+    // Fetch the advanced setting using the button setting ID and language code
+    const buttonAdvancedSetting = await buttonHelper.getButtonAdvancedSetting(
       buttonSetting.esp_buttonsettingid ?? "",
       languageCode,
-    )) as esp_ButtonAdvancedSetting | null;
-    if (!buttonAdvancedSettings) {
+    );
+    if (!buttonAdvancedSetting) {
       await ExceptionLowCodeButton.buttonAdvancedSettingNotFound(languageCode);
       return;
     }
-    // Check if there should be a confirmation dialog, and if so, show it
-    if (buttonAdvancedSettings.esp_showconfirmationdialog) {
-      const confirmation = await Helper.openConfirmationDialogBeforeRun(buttonAdvancedSettings);
+
+    // Optionally show a confirmation dialog before proceeding
+    if (buttonAdvancedSetting.esp_showconfirmationdialog) {
+      const confirmation = await buttonHelper.openConfirmationDialogBeforeRun();
       if (!confirmation) {
         return;
       }
     }
-    // Save the form if it is dirty and the setting is enabled
+
+    // Save the form if it is dirty and the configuration requires it
     if (formContext.data.entity.getIsDirty() && buttonSetting.esp_savebeforerunning) {
       console.log("Saving form before running the button");
       await formContext.data.save();
     }
-    // Make sure the endpoint is set
+
+    // Ensure the endpoint is set before making a request
     if (!buttonSetting.esp_endpoint) {
       await ExceptionLowCodeButton.showFormNotificationGenericError(
         "Endpoint Not Set",
@@ -48,43 +50,37 @@ export class ButtonRegistration {
       );
       return;
     }
-    // Execute the button in either sync or async mode
-    await (buttonAdvancedSettings.esp_executionmode ===
-    esp_buttonadvancedsetting_esp_buttonadvancedsetting_esp_executionmode.Async
-      ? this.executeAsync(formContext, buttonSetting, buttonAdvancedSettings)
-      : this.executeSync(formContext, buttonSetting, buttonAdvancedSettings));
+
+    // Execute in async or sync mode based on the advanced setting
+    if (
+      buttonAdvancedSetting.esp_executionmode ===
+      esp_buttonadvancedsetting_esp_buttonadvancedsetting_esp_executionmode.Async
+    ) {
+      await this.executeAsync(buttonHelper);
+    } else {
+      await this.executeSync(buttonHelper);
+    }
   }
 
-  static async executeAsync(
-    formContext: Xrm.FormContext,
-    buttonSetting: esp_ButtonSetting,
-    buttonAdvancedSetting: esp_ButtonAdvancedSetting,
-  ) {
-    console.log("Executing async call to " + buttonSetting.esp_endpoint);
-    if (buttonAdvancedSetting.esp_asyncformnotification) {
-      await Helper.asyncFormNotification(formContext, buttonAdvancedSetting);
+  static async executeAsync(buttonHelper: ButtonHelper) {
+    const { buttonSetting, buttonAdvancedSetting } = buttonHelper;
+    console.log(`Executing async call to ${buttonSetting?.esp_endpoint}`);
+    if (buttonAdvancedSetting?.esp_asyncformnotification) {
+      await buttonHelper.asyncFormNotification();
     }
-    void Helper.makeRequest("POST", buttonSetting.esp_endpoint!, Helper.getPayload(formContext, buttonSetting)).catch(
-      async (error) => {
-        await ExceptionLowCodeButton.showFormNotificationGenericError("Error during HTTP Call", error.message);
-        await Helper.clearFormNotification(formContext);
-        return;
-      },
-    );
+    buttonHelper.makeRequest("POST", buttonSetting!.esp_endpoint!, buttonHelper.getPayload()).catch(async (error) => {
+      await ExceptionLowCodeButton.showFormNotificationGenericError("Error during HTTP Call", error.message);
+      await buttonHelper.clearFormNotification();
+    });
   }
 
-  static async executeSync(
-    formContext: Xrm.FormContext,
-    buttonSetting: esp_ButtonSetting,
-    buttonAdvancedSetting: esp_ButtonAdvancedSetting,
-  ) {
-    console.log("Executing sync call..." + buttonSetting.esp_endpoint);
-    // Display a form notification if the setting is enabled
-    if (buttonAdvancedSetting.esp_syncformnotification) {
-      await Helper.syncFormNotification(formContext, buttonAdvancedSetting);
+  static async executeSync(buttonHelper: ButtonHelper) {
+    const { buttonSetting, buttonAdvancedSetting } = buttonHelper;
+    console.log(`Executing sync call to ${buttonSetting?.esp_endpoint}`);
+    if (buttonAdvancedSetting?.esp_syncformnotification) {
+      await buttonHelper.syncFormNotification();
     }
-    // Display a spinner if the setting is enabled
-    if (buttonAdvancedSetting.esp_syncspinner) {
+    if (buttonAdvancedSetting?.esp_syncspinner) {
       if (!buttonAdvancedSetting.esp_syncspinnertext) {
         await ExceptionLowCodeButton.showFormNotificationGenericError(
           "Sync Spinner Text Error",
@@ -94,58 +90,49 @@ export class ButtonRegistration {
       }
       Xrm.Utility.showProgressIndicator(buttonAdvancedSetting.esp_syncspinnertext);
     }
-    // Make the request
-    const response = await Helper.makeRequest(
-      "POST",
-      buttonSetting.esp_endpoint!,
-      Helper.getPayload(formContext, buttonSetting),
-    )
+    const response = await buttonHelper
+      .makeRequest("POST", buttonSetting!.esp_endpoint!, buttonHelper.getPayload())
       .catch(async (error) => {
         await ExceptionLowCodeButton.showFormNotificationGenericError("Error during HTTP Call", error.message);
         return;
       })
       .finally(() => {
-        if (buttonAdvancedSetting.esp_syncspinner) {
+        if (buttonAdvancedSetting?.esp_syncspinner) {
           Xrm.Utility.closeProgressIndicator();
-          Helper.clearFormNotification(formContext);
+          buttonHelper.clearFormNotification();
         }
       });
-    // Check if the response is an error 400 code
-    if (response?.status === 400) {
-      Helper.clearSyncNotifications(formContext, buttonAdvancedSetting);
+
+    if (!response) return;
+
+    if (response.status === 400) {
+      buttonHelper.clearSyncNotifications();
       const errorMessage = ErrorMessageResponse.fromJson(await response.text());
       await ExceptionLowCodeButton.showFormNotificationGenericError(errorMessage.title!, errorMessage.message);
       return;
     }
-    // Check if the response is an error 5xx code
-    if ((response?.status ?? 500) >= 500) {
-      Helper.clearSyncNotifications(formContext, buttonAdvancedSetting);
-      const errorText = (await response?.text()) ?? "An error occurred on the server. Please try again later.";
+    if ((response.status ?? 500) >= 500) {
+      buttonHelper.clearSyncNotifications();
+      const errorText = (await response.text()) ?? "An error occurred on the server. Please try again later.";
       await ExceptionLowCodeButton.showFormNotificationGenericError(
         "Error during HTTP Call",
-        "Error code: " + response?.status + "\n" + errorText,
+        `Error code: ${response.status}\n${errorText}`,
       );
       return;
     }
-    // Check if the response code is 200
-    if (response?.status === 200) {
-      // Clear the form notification and close the spinner if the setting is enabled
-      Helper.clearSyncNotifications(formContext, buttonAdvancedSetting);
-      // Show a success form notification if the setting is enabled
-      if (buttonAdvancedSetting.esp_syncsuccessformnotification) {
-        Helper.showSuccessFormNotification(formContext, buttonAdvancedSetting);
+    if (response.status === 200) {
+      buttonHelper.clearSyncNotifications();
+      if (buttonAdvancedSetting?.esp_syncsuccessformnotification) {
+        await buttonHelper.showSuccessFormNotification();
       }
-      // Show a success dialog if the setting is enabled
-      if (buttonAdvancedSetting.esp_syncconfirmationbox) {
-        await Helper.openSuccessDialogSync(buttonAdvancedSetting);
+      if (buttonAdvancedSetting?.esp_syncconfirmationbox) {
+        await buttonHelper.openSuccessDialogSync();
       }
-      // Show a success dialog and redirect if the setting is enabled
-      if (buttonAdvancedSetting.esp_syncconfirmationboxredirect) {
+      if (buttonAdvancedSetting?.esp_syncconfirmationboxredirect) {
         const redirectResponse = RedirectResponse.fromJson(await response.text());
-        await Helper.openSuccessDialogRedirect(formContext, buttonSetting, buttonAdvancedSetting, redirectResponse);
+        buttonHelper.openSuccessDialogRedirect(redirectResponse);
       }
-      // Refresh the form if the setting is enabled and the redirect is not needed or is in a new tab
-      Helper.reloadForm(formContext, buttonSetting, buttonAdvancedSetting);
+      buttonHelper.reloadForm();
     }
   }
 }
