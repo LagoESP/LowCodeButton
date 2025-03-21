@@ -1,9 +1,15 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
-// eslint-disable-next-line @typescript-eslint/no-require-imports
+/* eslint-disable @typescript-eslint/no-require-imports */
 const path = require("path");
+const glob = require("glob");
+
+const entries = {};
+glob.sync("./src/*.ts").forEach((file) => {
+  const entryName = path.basename(file, ".ts");
+  entries[entryName] = file;
+});
 
 module.exports = {
-  entry: "./src/index.ts",
+  entry: entries,
   module: {
     rules: [
       {
@@ -18,7 +24,7 @@ module.exports = {
   },
   output: {
     path: path.resolve(__dirname, "dist"),
-    filename: "LowCodeButtonBase.js",
+    filename: "[name].js",
     library: ["LCB"],
     libraryTarget: "var",
   },

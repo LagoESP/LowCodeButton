@@ -162,7 +162,7 @@ export class ButtonHelper {
     if (this.buttonSetting.esp_includerecordidinpayload) {
       payload = { ...payload, recordId: this.getRecordId() };
     }
-    if (this.buttonSetting.esp_includecallinguserinpayload) {
+    if (this.buttonSetting.esp_includecallinguseridinpayload) {
       payload = { ...payload, userId: this.getUserID() };
     }
     return payload;
