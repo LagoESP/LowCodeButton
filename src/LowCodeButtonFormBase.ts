@@ -1,34 +1,31 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable camelcase */
 import { esp_buttonadvancedsetting_esp_buttonadvancedsetting_esp_executionmode } from "./dataverse-gen";
-import { ExceptionLowCodeButton } from "./Exceptions/BaseButtonException";
-import { ButtonHelper } from "./Helpers/BaseButtonHelper";
+import { ExceptionLowCodeButton } from "./Exceptions/ButtonException";
+import { ButtonHelper } from "./Helpers/FormBaseButtonHelper";
 import { ErrorMessageResponse, RedirectResponse } from "./Models/BaseButtonResponseModels";
 
 export class ButtonRegistration {
-  static determineContext(control: any): 'form' | 'grid' | 'subgrid' | 'unknown' {
+  static determineContext(control: unknown): "form" | "grid" | "subgrid" | "unknown" {
     // Check if control is a form context
     if ((control as Xrm.FormContext).data) {
-        alert('The control is on a main form.');
-        return 'form';
+      alert("The control is on a main form.");
+      return "form";
     }
     // Check if control is a grid control
     else if ((control as Xrm.Controls.GridControl).getGrid) {
-        // Differentiate between main grid and subgrid
-        if (control.getParent && control.getParent()) {
-            alert('The control is on a subgrid.');
-            return 'subgrid';
-        } else {
-            alert('The control is on a main grid.');
-            return 'grid';
-        }
+      // Differentiate between main grid and subgrid
+      if ((control as Xrm.Controls.GridControl).getParent && (control as Xrm.Controls.GridControl).getParent()) {
+        alert("The control is on a subgrid.");
+        return "subgrid";
+      } else {
+        alert("The control is on a main grid.");
+        return "grid";
+      }
     }
-    alert('Unknown context.');
-    return 'unknown';
-}
-
-
-
+    alert("Unknown context.");
+    return "unknown";
+  }
 
   static async onClick(formContext: Xrm.FormContext, buttonSettingName: string) {
     // Create a buttonHelper instance with the form context

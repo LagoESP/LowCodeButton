@@ -4,7 +4,7 @@ import {
   esp_buttonadvancedsetting_esp_buttonadvancedsetting_esp_syncconfirmationboxredirectmode,
   esp_ButtonSetting,
 } from "../dataverse-gen";
-import { ExceptionLowCodeButton } from "../Exceptions/BaseButtonException";
+import { ExceptionLowCodeButton } from "../Exceptions/ButtonException";
 import { RedirectResponse } from "../Models/BaseButtonResponseModels";
 
 export class ButtonHelper {

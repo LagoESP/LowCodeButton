@@ -1,4 +1,4 @@
-import { ExceptionLowCodeButton } from "../Exceptions/BaseButtonException";
+import { ExceptionLowCodeButton } from "../Exceptions/ButtonException";
 
 export class RedirectResponse {
   redirectUri: string;
