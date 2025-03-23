@@ -17,11 +17,7 @@ export class ButtonRegistrationGrid {
       return;
     }
 
-    if (
-      buttonHelper.buttonAdvancedSetting!.esp_showconfirmationdialog &&
-      buttonHelper.buttonAdvancedSetting!.esp_executionmode ===
-        esp_buttonadvancedsetting_esp_buttonadvancedsetting_esp_executionmode.Sync
-    ) {
+    if (buttonHelper.buttonAdvancedSetting!.esp_showconfirmationdialog) {
       const confirmation = await buttonHelper.openConfirmationDialogBeforeRun();
       if (!confirmation) {
         return;
@@ -29,7 +25,7 @@ export class ButtonRegistrationGrid {
     }
 
     if (!buttonHelper.buttonSetting!.esp_endpoint) {
-      await ExceptionLowCodeButton.showFormNotificationGenericError(
+      await ExceptionLowCodeButton.displayGenericErrorNotification(
         "Endpoint Not Set",
         "The endpoint for the button is not set. Please set it up in the button settings.",
       );
@@ -51,15 +47,16 @@ export class ButtonRegistrationGrid {
    * @param buttonHelper - The initialized ButtonGridHelper instance.
    */
   static async executeAsync(buttonHelper: ButtonGridHelper) {
-    debugger;
     const { buttonSetting, buttonAdvancedSetting } = buttonHelper;
     console.log(`Executing async call to ${buttonSetting?.esp_endpoint}`);
     if (buttonAdvancedSetting?.esp_asyncformnotification) {
       void buttonHelper.asyncGridNotification();
     }
-    buttonHelper.makeRequest("POST", buttonSetting!.esp_endpoint!, buttonHelper.getPayload()).catch(async (error) => {
-      await ExceptionLowCodeButton.showFormNotificationGenericError("Error during HTTP Call", error.message);
-    });
+    buttonHelper
+      .makeRequest("POST", buttonSetting!.esp_endpoint!, await buttonHelper.getPayload())
+      .catch(async (error) => {
+        await ExceptionLowCodeButton.displayGenericErrorNotification("Error during HTTP Call", error.message);
+      });
   }
 
   /**
@@ -69,10 +66,12 @@ export class ButtonRegistrationGrid {
   static async executeSync(buttonHelper: ButtonGridHelper) {
     const { buttonSetting, buttonAdvancedSetting } = buttonHelper;
     console.log(`Executing sync call to ${buttonSetting?.esp_endpoint}`);
-
+    if (buttonAdvancedSetting?.esp_syncformnotification) {
+      await buttonHelper.syncGridNotification();
+    }
     if (buttonAdvancedSetting?.esp_syncspinner) {
       if (!buttonAdvancedSetting.esp_syncspinnertext) {
-        await ExceptionLowCodeButton.showFormNotificationGenericError(
+        await ExceptionLowCodeButton.displayGenericErrorNotification(
           "Sync Spinner Text Error",
           "The sync spinner text is empty! Please fill it on your configuration settings.",
         );
@@ -82,14 +81,17 @@ export class ButtonRegistrationGrid {
     }
 
     const response = await buttonHelper
-      .makeRequest("POST", buttonSetting!.esp_endpoint!, buttonHelper.getPayload())
+      .makeRequest("POST", buttonSetting!.esp_endpoint!, await buttonHelper.getPayload())
       .catch(async (error) => {
-        await ExceptionLowCodeButton.showFormNotificationGenericError("Error during HTTP Call", error.message);
+        await ExceptionLowCodeButton.displayGenericErrorNotification("Error during HTTP Call", error.message);
         return;
       })
       .finally(() => {
         if (buttonAdvancedSetting?.esp_syncspinner) {
           Xrm.Utility.closeProgressIndicator();
+        }
+        if (buttonAdvancedSetting?.esp_syncformnotification) {
+          void buttonHelper.clearGridNotification();
         }
       });
 
@@ -97,13 +99,13 @@ export class ButtonRegistrationGrid {
 
     if (response.status === 400) {
       const errorMessage = ErrorMessageResponse.fromJson(await response.text());
-      await ExceptionLowCodeButton.showFormNotificationGenericError(errorMessage.title!, errorMessage.message);
+      await ExceptionLowCodeButton.displayGenericErrorNotification(errorMessage.title!, errorMessage.message);
       return;
     }
 
     if ((response.status ?? 500) >= 500) {
       const errorText = (await response.text()) ?? "An error occurred on the server. Please try again later.";
-      await ExceptionLowCodeButton.showFormNotificationGenericError(
+      await ExceptionLowCodeButton.displayGenericErrorNotification(
         "Error during HTTP Call",
         `Error code: ${response.status}\n${errorText}`,
       );
@@ -111,16 +113,18 @@ export class ButtonRegistrationGrid {
     }
 
     if (response.status === 200) {
+      buttonHelper.clearSyncNotifications();
       if (buttonAdvancedSetting?.esp_syncsuccessformnotification) {
-        console.log("Sync success notification would be shown.");
+        await buttonHelper.showSuccessGridNotification();
       }
       if (buttonAdvancedSetting?.esp_syncconfirmationbox) {
-        console.log("Sync confirmation dialog would be shown.");
+        await buttonHelper.openSuccessDialogSync();
       }
-      //   if (buttonAdvancedSetting?.esp_syncconfirmationboxredirect) {
-      //     const redirectResponse = RedirectResponse.fromJson(await response.text());
-      //     buttonHelper.openSuccessDialogRedirect(redirectResponse);
-      //   }
+      if (buttonAdvancedSetting?.esp_syncconfirmationboxredirect) {
+        const redirectResponse = RedirectResponse.fromJson(await response.text());
+        buttonHelper.openSuccessDialogRedirect(redirectResponse);
+      }
+      buttonHelper.reloadGrid();
     }
   }
 }

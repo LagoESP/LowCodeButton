@@ -13,6 +13,7 @@ export const esp_buttonsettingMetadata = {
     utcconversiontimezonecode: "Integer",
     versionnumber: "BigInt",
     // Optionsets
+    esp_buttonlocation: "Optionset",
     statecode: "Optionset",
     statuscode: "Optionset",
     // Date Formats
@@ -41,13 +42,14 @@ export const enum esp_ButtonSettingAttributes {
   CreatedOnBehalfBy = "createdonbehalfby",
   CreatedOnBehalfByName = "createdonbehalfbyname",
   CreatedOnBehalfByYomiName = "createdonbehalfbyyominame",
+  esp_ButtonLocation = "esp_buttonlocation",
   esp_ButtonName = "esp_buttonname",
   esp_ButtonSettingId = "esp_buttonsettingid",
   esp_Endpoint = "esp_endpoint",
   esp_IncludeCallingUserIDinPayload = "esp_includecallinguseridinpayload",
   esp_IncludeEntityLogicalNameinPayload = "esp_includeentitylogicalnameinpayload",
   esp_IncludeRecordIDinPayload = "esp_includerecordidinpayload",
-  esp_RefreshFormwhenAPICallEnds = "esp_refreshformwhenapicallends",
+  esp_RefreshWhenAPICallEnds = "esp_refreshwhenapicallends",
   esp_SaveBeforeRunning = "esp_savebeforerunning",
   ImportSequenceNumber = "importsequencenumber",
   ModifiedBy = "modifiedby",
@@ -103,6 +105,10 @@ export interface esp_ButtonSetting extends IEntity {
   */
   createdonbehalfbyyominame?: string | null;
   /*
+  Button Location [Required] esp_buttonsetting_esp_buttonsetting_esp_buttonlocation Location Type for the button. Either Form or Grid/Subgrid
+  */
+  esp_buttonlocation?: import("../enums/esp_buttonsetting_esp_buttonsetting_esp_buttonlocation").esp_buttonsetting_esp_buttonsetting_esp_buttonlocation;
+  /*
   Button Name [Required] StringType Button Name (Unique, alternate key)
   */
   esp_buttonname?: string;
@@ -127,9 +133,9 @@ export interface esp_ButtonSetting extends IEntity {
   */
   esp_includerecordidinpayload?: boolean;
   /*
-  Refresh Form when API Call Ends [Required] BooleanType
+  Refresh When API Call Ends [Required] BooleanType Refresh When API Call Ends
   */
-  esp_refreshformwhenapicallends?: boolean;
+  esp_refreshwhenapicallends?: boolean;
   /*
   Save Before Running [Required] BooleanType Saves the form before running, so Power Automate can fetch the freshest details.
   */

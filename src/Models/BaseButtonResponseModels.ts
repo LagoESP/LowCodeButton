@@ -10,7 +10,7 @@ export class RedirectResponse {
   static fromJson(json: string): RedirectResponse {
     const data = JSON.parse(json);
     if (typeof data.redirectUri !== "string") {
-      ExceptionLowCodeButton.showFormNotificationGenericError(
+      ExceptionLowCodeButton.displayGenericErrorNotification(
         "Redirect URI Not Found",
         "The redirect URI was not found in the response.",
       );
@@ -33,7 +33,7 @@ export class ErrorMessageResponse {
     const data = JSON.parse(json);
     console.log("Error message data", data);
     if (typeof data.message !== "string") {
-      ExceptionLowCodeButton.showFormNotificationGenericError(
+      ExceptionLowCodeButton.displayGenericErrorNotification(
         "Error Message Not Found",
         "The error message was not found in the response.",
       );

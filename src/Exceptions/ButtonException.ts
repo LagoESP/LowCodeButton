@@ -15,7 +15,7 @@ export class ExceptionLowCodeButton {
     await Xrm.Navigation.openAlertDialog(errorStrings);
   }
 
-  static async showFormNotificationGenericError(title: string, text: string) {
+  static async displayGenericErrorNotification(title: string, text: string) {
     const errorStrings = {
       text: text,
       title: title,

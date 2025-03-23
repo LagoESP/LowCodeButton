@@ -14,11 +14,7 @@ export class ButtonRegistrationForm {
     const buttonHelper = new ButtonFormHelper(formContext);
     await buttonHelper.initializeSettings(buttonSettingName);
 
-    if (
-      buttonHelper.buttonAdvancedSetting!.esp_showconfirmationdialog &&
-      buttonHelper.buttonAdvancedSetting!.esp_executionmode ===
-        esp_buttonadvancedsetting_esp_buttonadvancedsetting_esp_executionmode.Sync
-    ) {
+    if (buttonHelper.buttonAdvancedSetting!.esp_showconfirmationdialog) {
       const confirmation = await buttonHelper.openConfirmationDialogBeforeRun();
       if (!confirmation) {
         return;
@@ -31,7 +27,7 @@ export class ButtonRegistrationForm {
     }
 
     if (!buttonHelper.buttonSetting!.esp_endpoint) {
-      await ExceptionLowCodeButton.showFormNotificationGenericError(
+      await ExceptionLowCodeButton.displayGenericErrorNotification(
         "Endpoint Not Set",
         "The endpoint for the button is not set. Please set it up in the button settings.",
       );
@@ -58,10 +54,12 @@ export class ButtonRegistrationForm {
     if (buttonAdvancedSetting?.esp_asyncformnotification) {
       void buttonHelper.asyncFormNotification();
     }
-    buttonHelper.makeRequest("POST", buttonSetting!.esp_endpoint!, buttonHelper.getPayload()).catch(async (error) => {
-      await ExceptionLowCodeButton.showFormNotificationGenericError("Error during HTTP Call", error.message);
-      await buttonHelper.clearFormNotification();
-    });
+    buttonHelper
+      .makeRequest("POST", buttonSetting!.esp_endpoint!, await buttonHelper.getPayload())
+      .catch(async (error) => {
+        await ExceptionLowCodeButton.displayGenericErrorNotification("Error during HTTP Call", error.message);
+        await buttonHelper.clearFormNotification();
+      });
   }
 
   /**
@@ -76,7 +74,7 @@ export class ButtonRegistrationForm {
     }
     if (buttonAdvancedSetting?.esp_syncspinner) {
       if (!buttonAdvancedSetting.esp_syncspinnertext) {
-        await ExceptionLowCodeButton.showFormNotificationGenericError(
+        await ExceptionLowCodeButton.displayGenericErrorNotification(
           "Sync Spinner Text Error",
           "The sync spinner text is empty! Please fill it on your configuration settings.",
         );
@@ -85,9 +83,9 @@ export class ButtonRegistrationForm {
       Xrm.Utility.showProgressIndicator(buttonAdvancedSetting.esp_syncspinnertext);
     }
     const response = await buttonHelper
-      .makeRequest("POST", buttonSetting!.esp_endpoint!, buttonHelper.getPayload())
+      .makeRequest("POST", buttonSetting!.esp_endpoint!, await buttonHelper.getPayload())
       .catch(async (error) => {
-        await ExceptionLowCodeButton.showFormNotificationGenericError("Error during HTTP Call", error.message);
+        await ExceptionLowCodeButton.displayGenericErrorNotification("Error during HTTP Call", error.message);
         return;
       })
       .finally(() => {
@@ -102,13 +100,13 @@ export class ButtonRegistrationForm {
     if (response.status === 400) {
       buttonHelper.clearSyncNotifications();
       const errorMessage = ErrorMessageResponse.fromJson(await response.text());
-      await ExceptionLowCodeButton.showFormNotificationGenericError(errorMessage.title!, errorMessage.message);
+      await ExceptionLowCodeButton.displayGenericErrorNotification(errorMessage.title!, errorMessage.message);
       return;
     }
     if ((response.status ?? 500) >= 500) {
       buttonHelper.clearSyncNotifications();
       const errorText = (await response.text()) ?? "An error occurred on the server. Please try again later.";
-      await ExceptionLowCodeButton.showFormNotificationGenericError(
+      await ExceptionLowCodeButton.displayGenericErrorNotification(
         "Error during HTTP Call",
         `Error code: ${response.status}\n${errorText}`,
       );

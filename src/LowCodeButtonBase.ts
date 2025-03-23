@@ -6,11 +6,11 @@ import { ButtonRegistrationGrid } from "./LowCodeButtonGridBase";
 export class ButtonRegistration {
   static onClick(context: Xrm.FormContext | Xrm.Controls.GridControl, buttonSettingName: string) {
     if (!context) {
-      ExceptionLowCodeButton.showFormNotificationGenericError("Registration Error", "No context provided");
+      ExceptionLowCodeButton.displayGenericErrorNotification("Registration Error", "No context provided");
       return;
     }
     if (!buttonSettingName) {
-      ExceptionLowCodeButton.showFormNotificationGenericError("Registration Error", "No button setting name provided");
+      ExceptionLowCodeButton.displayGenericErrorNotification("Registration Error", "No button setting name provided");
       return;
     }
     const baseHelper = new BaseHelper();
@@ -20,10 +20,8 @@ export class ButtonRegistration {
         ButtonRegistrationForm.onClick(context as Xrm.FormContext, buttonSettingName);
         break;
       case "grid":
-        ButtonRegistrationGrid.onClick(context as Xrm.Controls.GridControl, buttonSettingName);
-        break;
       case "subgrid":
-        console.log("Subgrid button clicked");
+        ButtonRegistrationGrid.onClick(context as Xrm.Controls.GridControl, buttonSettingName);
         break;
       default:
         console.log("Unknown button location");

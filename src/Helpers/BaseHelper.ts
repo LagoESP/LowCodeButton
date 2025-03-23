@@ -58,6 +58,16 @@ export class BaseHelper {
   }
 
   /**
+   * Retrieves the Entity Plural Name for the provided entity logical name.
+   *
+   * @returns The Entity Plural Name.
+   */
+  public async getEntityPluralName(entity: string): Promise<string> {
+    const name = await Xrm.Utility.getEntityMetadata(entity);
+    return name.EntitySetName;
+  }
+
+  /**
    * Makes an HTTP request using fetch with pre-configured headers.
    *
    * @param method - The HTTP method (e.g., "GET", "POST").
@@ -95,13 +105,14 @@ export class BaseHelper {
       <fetch top="1">
         <entity name="esp_buttonsetting">
           <attribute name="esp_buttonsettingid" />
+          <attribute name="esp_buttonlocation" />
           <attribute name="esp_endpoint" />
           <attribute name="esp_includecallinguseridinpayload" />
           <attribute name="esp_includeentitylogicalnameinpayload" />
           <attribute name="esp_includerecordidinpayload" />
           <attribute name="esp_buttonname" />
           <attribute name="esp_savebeforerunning" />
-          <attribute name="esp_refreshformwhenapicallends" />
+          <attribute name="esp_refreshwhenapicallends" />
           <filter type="and">
             <condition attribute="esp_buttonname" operator="eq" value="${buttonSettingName}" />
           </filter>

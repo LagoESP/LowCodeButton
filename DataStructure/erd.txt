@@ -8,12 +8,13 @@ Table esp_language {
 Table esp_buttonsetting {
   esp_buttonsettingid id [primary key]
   esp_name string
+  esp_buttonlocation choice
   esp_endpoint string
   esp_includecallinguseridinpayload bool
   esp_includeentitylogicalnameinpayload bool
   esp_includerecordidinpayload bool [note: 'Implemented until here']
   esp_savebeforerunning bool [not null, default: true]
-  esp_refreshformwhenapicallends bool [not null, default: false]
+  esp_refreshwhenapicallends bool [not null, default: false]
 }
 
 Table esp_buttonadvancedsetting {

@@ -6,6 +6,7 @@ export * from "./enums/esp_buttonadvancedsetting_esp_buttonadvancedsetting_esp_e
 export * from "./enums/esp_buttonadvancedsetting_esp_buttonadvancedsetting_esp_syncconfirmationboxredirectmode";
 export * from "./enums/esp_buttonadvancedsetting_esp_buttonadvancedsetting_statecode";
 export * from "./enums/esp_buttonadvancedsetting_esp_buttonadvancedsetting_statuscode";
+export * from "./enums/esp_buttonsetting_esp_buttonsetting_esp_buttonlocation";
 export * from "./enums/esp_buttonsetting_esp_buttonsetting_statecode";
 export * from "./enums/esp_buttonsetting_esp_buttonsetting_statuscode";
 export * from "./enums/esp_language_esp_language_statecode";
