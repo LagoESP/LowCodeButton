@@ -9,13 +9,11 @@ import { BaseHelper } from "./BaseHelper";
 
 /**
  * ButtonGridHelper extends BaseHelper to provide grid-specific functionality.
- * It uses a selected grid context to build a payload containing the selected record GUIDs.
+ * It builds payloads with selected record GUIDs and handles grid notifications.
  */
 export class ButtonGridHelper extends BaseHelper {
-  initializeSubgrid() {
-    throw new Error("Method not implemented.");
-  }
   globalNotificationId?: string;
+
   /**
    * Constructs a new ButtonGridHelper instance with the provided grid control.
    * @param selectedContext - The grid control representing the selected context.
@@ -26,9 +24,8 @@ export class ButtonGridHelper extends BaseHelper {
   }
 
   /**
-   * Returns an object containing the selected record GUIDs.
-   * Keys are in the format "record0", "record1", etc.
-   * @returns An object mapping record keys to GUID strings.
+   * Returns an array containing the GUIDs of the selected records.
+   * @returns An array of selected record GUIDs as lowercase strings.
    * @throws Error if the grid control is not set.
    */
   public getSelectedRecordIds(): string[] {
@@ -44,8 +41,8 @@ export class ButtonGridHelper extends BaseHelper {
   }
 
   /**
-   * Returns the logical name of the entity in the grid.
-   * @returns The logical name of the entity in the grid.
+   * Returns the logical name of the entity displayed in the grid.
+   * @returns The entity logical name.
    * @throws Error if the grid control is not set.
    */
   public getEntityLogicalName(): string {
@@ -56,7 +53,8 @@ export class ButtonGridHelper extends BaseHelper {
   }
 
   /**
-   * Checks if there are any selected records.
+   * Validates that at least one record is selected in the grid.
+   * @returns A Promise that resolves if selection is valid.
    * @throws ExceptionLowCodeButton if no records are selected.
    */
   public async validateSelection(): Promise<boolean | void> {
@@ -76,9 +74,10 @@ export class ButtonGridHelper extends BaseHelper {
 
   /**
    * Builds a payload for grid actions.
-   * The payload includes the entity logical name + entity logical name in plural (if configured), an object of selected record GUIDs,
-   * and the calling user ID (if configured). In the case of be a subgrid, an additional 3 properties (in case congigured) are added to the payload, being the parent logical name, the parent logical name in plural and the parent record id.
-   * @returns An object containing the payload data.
+   * The payload includes the entity logical name, the plural name (if configured),
+   * selected record GUIDs, and the calling user ID.
+   * If in a subgrid, additional parent entity information is included.
+   * @returns A Promise resolving to an object containing the payload data.
    * @throws Error if the grid control or button setting is not set.
    */
   public async getPayload(): Promise<Record<string, unknown>> {
@@ -90,26 +89,28 @@ export class ButtonGridHelper extends BaseHelper {
       payload = { ...payload, entityLogicalName: this.gridControl.getEntityName() };
       payload = { ...payload, entityLogicalPluralName: await this.getEntityPluralName(this.getEntityLogicalName()) };
       if (this.containerType === "subgrid") {
-        payload = { ...payload, parentEntityLogicalName: this.getFormContextInSubgrid()!.data.entity.getEntityName()! };
-        payload = {
-          ...payload,
-          parentEntityLogicalPluralName: await this.getEntityPluralName(
-            this.getFormContextInSubgrid()!.data.entity.getEntityName()!,
-          ),
-        };
+        const parentFormContext = this.getFormContextInSubgrid();
+        if (parentFormContext) {
+          payload = { ...payload, parentEntityLogicalName: parentFormContext.data.entity.getEntityName() };
+          payload = {
+            ...payload,
+            parentEntityLogicalPluralName: await this.getEntityPluralName(
+              parentFormContext.data.entity.getEntityName(),
+            ),
+          };
+        }
       }
     }
     if (this.buttonSetting.esp_includerecordidinpayload) {
       payload = { ...payload, recordIds: this.getSelectedRecordIds() };
       if (this.containerType === "subgrid") {
-        payload = {
-          ...payload,
-          parentRecordId: this.getFormContextInSubgrid()!
-            .data.entity.getId()
-            .replace("{", "")
-            .replace("}", "")
-            .toLowerCase(),
-        };
+        const parentFormContext = this.getFormContextInSubgrid();
+        if (parentFormContext) {
+          payload = {
+            ...payload,
+            parentRecordId: parentFormContext.data.entity.getId().replace("{", "").replace("}", "").toLowerCase(),
+          };
+        }
       }
     }
     if (this.buttonSetting.esp_includecallinguseridinpayload) {
@@ -119,8 +120,7 @@ export class ButtonGridHelper extends BaseHelper {
   }
 
   /**
-   * Opens a confirmation dialog before executing the button action.
-   *
+   * Opens a confirmation dialog before executing the grid action.
    * @returns A Promise that resolves to true if the user confirms the dialog, false otherwise.
    */
   public async openConfirmationDialogBeforeRun(): Promise<boolean> {
@@ -144,7 +144,6 @@ export class ButtonGridHelper extends BaseHelper {
 
   /**
    * Displays an asynchronous grid notification for 5 seconds using global notifications.
-   *
    * @returns A Promise that resolves when the notification is cleared.
    */
   public async asyncGridNotification(): Promise<void> {
@@ -171,8 +170,7 @@ export class ButtonGridHelper extends BaseHelper {
 
   /**
    * Clears the grid notification using the stored global notification ID.
-   *
-   * @throws Error if there is no notification to clear.
+   * @throws Error if no notification is currently set.
    */
   public clearGridNotification(): void {
     if (this.globalNotificationId) {
@@ -182,9 +180,8 @@ export class ButtonGridHelper extends BaseHelper {
   }
 
   /**
-   * Displays a synchronous grid notification for 120 seconds using global notifications, waiting to be cleared once the API Call finishes.
-   *
-   * @returns A Promise that resolves when the notification is set.
+   * Displays a synchronous grid notification for 120 seconds using global notifications.
+   * @returns A Promise that resolves when the notification is cleared.
    */
   public async syncGridNotification(): Promise<void> {
     if (!this.buttonAdvancedSetting || this.buttonAdvancedSetting.esp_syncformnotificationtext == null) {
@@ -208,7 +205,8 @@ export class ButtonGridHelper extends BaseHelper {
   }
 
   /**
-   * Clears all synchronous notifications including form notifications and progress indicators.
+   * Clears all synchronous notifications, including grid notifications and progress indicators.
+   * @returns A Promise that resolves when the notifications are cleared.
    */
   public async clearSyncNotifications(): Promise<void> {
     if (this.buttonAdvancedSetting?.esp_syncformnotification) {
@@ -220,8 +218,7 @@ export class ButtonGridHelper extends BaseHelper {
   }
 
   /**
-   * Displays a success form notification for 5 seconds.
-   *
+   * Displays a success grid notification for 5 seconds using global notifications.
    * @returns A Promise that resolves when the notification is cleared.
    */
   public async showSuccessGridNotification(): Promise<void> {
@@ -252,7 +249,6 @@ export class ButtonGridHelper extends BaseHelper {
 
   /**
    * Opens a synchronous success dialog and awaits the user's confirmation.
-   *
    * @returns A Promise that resolves to true if the success dialog is confirmed, or false otherwise.
    */
   public async openSuccessDialogSync(): Promise<boolean> {
@@ -274,8 +270,7 @@ export class ButtonGridHelper extends BaseHelper {
 
   /**
    * Opens a success dialog that may redirect the user based on their confirmation.
-   * If the user confirms, the browser is redirected; otherwise, the form is reloaded.
-   *
+   * If confirmed, the browser is redirected; otherwise, the grid is reloaded.
    * @param response - An object containing the redirect URI.
    */
   public openSuccessDialogRedirect(response: RedirectResponse): void {
@@ -308,15 +303,18 @@ export class ButtonGridHelper extends BaseHelper {
           window.open(response.redirectUri, "_blank")!.focus();
         }
       } else {
-        console.log("User cancelled the dialog, refreshing the form.");
+        console.log("User cancelled the dialog, refreshing the grid.");
         this.reloadGrid();
       }
     });
   }
 
+  /**
+   * Reloads the grid and, if in a subgrid, reloads the parent form.
+   */
   public reloadGrid(): void {
     if (!this.gridControl || !this.buttonSetting || !this.buttonAdvancedSetting) {
-      throw new Error("Required properties are not set for reloading the form.");
+      throw new Error("Required properties are not set for reloading the grid.");
     }
     if (
       this.buttonSetting.esp_refreshwhenapicallends &&
@@ -333,6 +331,11 @@ export class ButtonGridHelper extends BaseHelper {
     }
   }
 
+  /**
+   * Reloads the parent form for subgrid contexts.
+   * @returns The parent form context if available.
+   * @throws Error if required properties are not set or the container is not a subgrid.
+   */
   public reloadForm(): void {
     if (!this.formContext || !this.buttonSetting || !this.buttonAdvancedSetting || this.containerType !== "subgrid") {
       throw new Error("Required properties are not set for reloading the form.");
@@ -349,13 +352,17 @@ export class ButtonGridHelper extends BaseHelper {
     }
   }
 
+  /**
+   * Retrieves the parent form context when the grid is embedded as a subgrid.
+   * @returns The parent form context or null if not available.
+   */
   public getFormContextInSubgrid(): Xrm.FormContext | null {
     if (
       this.buttonSetting!.esp_buttonlocation === esp_buttonsetting_esp_buttonsetting_esp_buttonlocation.Subgrid &&
       this.containerType === "subgrid"
     ) {
       console.log("Subgrid detected. Setting form context to parent form.");
-      // Disable eslint for the next line because the formContext property is not defined in the ButtonGridHelper class, but exists on the gridControl property in the case of a subgrid.
+      // Cast gridControl as any to access the formContext property.
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const tempControl = this.gridControl as any;
       return tempControl.formContext as Xrm.FormContext;
