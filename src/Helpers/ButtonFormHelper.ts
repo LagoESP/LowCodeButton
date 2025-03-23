@@ -1,157 +1,74 @@
 /* eslint-disable camelcase */
-import {
-  esp_ButtonAdvancedSetting,
-  esp_buttonadvancedsetting_esp_buttonadvancedsetting_esp_syncconfirmationboxredirectmode,
-  esp_ButtonSetting,
-} from "../dataverse-gen";
+import { esp_buttonadvancedsetting_esp_buttonadvancedsetting_esp_syncconfirmationboxredirectmode } from "../dataverse-gen";
 import { ExceptionLowCodeButton } from "../Exceptions/ButtonException";
 import { RedirectResponse } from "../Models/BaseButtonResponseModels";
+import { BaseHelper } from "./BaseHelper"; // Adjust path as needed
 
-export class ButtonHelper {
-  formContext?: Xrm.FormContext;
-  buttonSetting?: esp_ButtonSetting;
-  buttonAdvancedSetting?: esp_ButtonAdvancedSetting;
-
-  constructor(
-    formContext?: Xrm.FormContext,
-    buttonSetting?: esp_ButtonSetting,
-    buttonAdvancedSetting?: esp_ButtonAdvancedSetting,
-  ) {
-    this.formContext = formContext;
-    this.buttonSetting = buttonSetting;
-    this.buttonAdvancedSetting = buttonAdvancedSetting;
+/**
+ * ButtonFormHelper extends BaseHelper to provide form-specific functionality.
+ * It accepts only a Xrm.FormContext as the context.
+ */
+export class ButtonFormHelper extends BaseHelper {
+  /**
+   * Constructs a new ButtonFormHelper instance with the provided FormContext.
+   *
+   * @param formContext - The Xrm.FormContext representing the current form.
+   */
+  constructor(formContext: Xrm.FormContext) {
+    super();
+    // Set the context and container type using the BaseHelper's method.
+    this.getButtonLocation(formContext);
   }
 
-  // Setter methods allow properties to be defined later
-  setFormContext(formContext: Xrm.FormContext) {
-    this.formContext = formContext;
+  /**
+   * Static factory method to create and initialize a ButtonFormHelper instance.
+   *
+   * @param formContext - The Xrm.FormContext representing the current form.
+   * @param buttonSettingName - The name of the button setting to retrieve.
+   * @returns A Promise that resolves to an initialized ButtonFormHelper instance.
+   */
+  public static async create(formContext: Xrm.FormContext, buttonSettingName: string): Promise<ButtonFormHelper> {
+    const helper = new ButtonFormHelper(formContext);
+    await helper.initializeSettings(buttonSettingName);
+    return helper;
   }
 
-  setButtonSetting(buttonSetting: esp_ButtonSetting) {
-    this.buttonSetting = buttonSetting;
-  }
-
-  setButtonAdvancedSetting(buttonAdvancedSetting: esp_ButtonAdvancedSetting) {
-    this.buttonAdvancedSetting = buttonAdvancedSetting;
-  }
-
-  getLanguageCode(): number {
-    return Xrm.Utility.getGlobalContext().userSettings.languageId;
-  }
-
-  getUserID(): string {
-    return Xrm.Utility.getGlobalContext().userSettings.userId.replace("{", "").replace("}", "").toLowerCase();
-  }
-
-  getEntityLogicalName(): string {
+  /**
+   * Retrieves the entity logical name from the current form context.
+   *
+   * @returns The entity logical name.
+   * @throws Error if the form context is not set.
+   */
+  public getEntityLogicalName(): string {
     if (!this.formContext) {
       throw new Error("Form context is not set.");
     }
     return this.formContext.data.entity.getEntityName();
   }
 
-  getRecordId(): string {
+  /**
+   * Retrieves the record ID from the current form context.
+   *
+   * @returns The record ID as a lowercase string without curly braces.
+   * @throws Error if the form context is not set.
+   */
+  public getRecordId(): string {
     if (!this.formContext) {
       throw new Error("Form context is not set.");
     }
     return this.formContext.data.entity.getId().replace("{", "").replace("}", "").toLowerCase();
   }
 
-  async getButtonSetting(buttonSettingName: string): Promise<esp_ButtonSetting | null> {
-    const fetchXml = `
-      <fetch top="1">
-        <entity name="esp_buttonsetting">
-          <attribute name="esp_buttonsettingid" />
-          <attribute name="esp_endpoint" />
-          <attribute name="esp_includecallinguseridinpayload" />
-          <attribute name="esp_includeentitylogicalnameinpayload" />
-          <attribute name="esp_includerecordidinpayload" />
-          <attribute name="esp_buttonname" />
-          <attribute name="esp_savebeforerunning" />
-          <attribute name="esp_refreshformwhenapicallends" />
-          <filter type="and">
-            <condition attribute="esp_buttonname" operator="eq" value="${buttonSettingName}" />
-          </filter>
-        </entity>
-      </fetch>
-    `;
-    const query = `?fetchXml=${encodeURIComponent(fetchXml)}`;
-    const url = `${Xrm.Utility.getGlobalContext().getClientUrl()}/api/data/v9.1/esp_buttonsettings${query}`;
-
-    try {
-      const response = await this.makeRequest("GET", url);
-      const data = await response.json();
-      const setting = data.value[0] as esp_ButtonSetting;
-      this.buttonSetting = setting;
-      return setting;
-    } catch (error) {
-      console.error("Error fetching button setting:", error);
-      return null;
-    }
-  }
-
-  async getButtonAdvancedSetting(mainButtonSettingId: string, lcid: number): Promise<esp_ButtonAdvancedSetting | null> {
-    const fetchXml = `
-      <fetch top="1">
-        <entity name="esp_buttonadvancedsetting">
-          <attribute name="esp_asyncformnotification" />
-          <attribute name="esp_asyncformnotificationtext" />
-          <attribute name="esp_buttonadvancedsettingid" />
-          <attribute name="esp_confirmationdialogcancellabel" />
-          <attribute name="esp_confirmationdialogconfirmlabel" />
-          <attribute name="esp_confirmationdialogsubtitle" />
-          <attribute name="esp_confirmationdialogtext" />
-          <attribute name="esp_confirmationdialogtitle" />
-          <attribute name="esp_executionmode" />
-          <attribute name="esp_mainbuttonsetting" />
-          <attribute name="esp_settingid" />
-          <attribute name="esp_settinglanguage" />
-          <attribute name="esp_showconfirmationdialog" />
-          <attribute name="esp_syncconfirmationbox" />
-          <attribute name="esp_syncconfirmationboxconfirmlabel" />
-          <attribute name="esp_syncconfirmationboxredirect" />
-          <attribute name="esp_syncconfirmationboxredirectcancellabel" />
-          <attribute name="esp_syncconfirmationboxredirectconfirmlabel" />
-          <attribute name="esp_syncconfirmationboxredirectmode" />
-          <attribute name="esp_syncconfirmationboxredirectsubtitle" />
-          <attribute name="esp_syncconfirmationboxredirecttext" />
-          <attribute name="esp_syncconfirmationboxredirecttitle" />
-          <attribute name="esp_syncconfirmationboxtext" />
-          <attribute name="esp_syncconfirmationboxtitle" />
-          <attribute name="esp_syncformnotification" />
-          <attribute name="esp_syncformnotificationtext" />
-          <attribute name="esp_syncrefreshform" />
-          <attribute name="esp_syncspinner" />
-          <attribute name="esp_syncspinnertext" />
-          <attribute name="esp_syncsuccessformnotification" />
-          <attribute name="esp_syncsuccessformnotificationtext" />
-          <filter>
-            <condition attribute="esp_mainbuttonsetting" operator="eq" value="${mainButtonSettingId}" />
-          </filter>
-          <link-entity name="esp_language" from="esp_languageid" to="esp_settinglanguage" link-type="inner">
-            <filter>
-              <condition attribute="esp_lcid" operator="eq" value="${lcid}" />
-            </filter>
-          </link-entity>
-        </entity>
-      </fetch>
-    `;
-    const query = `?fetchXml=${encodeURIComponent(fetchXml)}`;
-    const url = `${Xrm.Utility.getGlobalContext().getClientUrl()}/api/data/v9.1/esp_buttonadvancedsettings${query}`;
-
-    try {
-      const response = await this.makeRequest("GET", url);
-      const data = await response.json();
-      const advancedSetting = data.value[0] as esp_ButtonAdvancedSetting;
-      this.buttonAdvancedSetting = advancedSetting;
-      return advancedSetting;
-    } catch (error) {
-      console.error("Error fetching button advanced setting:", error);
-      return null;
-    }
-  }
-
-  getPayload(): Record<string, unknown> {
+  /**
+   * Builds a payload based on the button setting configuration and form context.
+   *
+   * The payload may include the entity logical name, record ID, and user ID,
+   * according to the configuration flags in the button setting.
+   *
+   * @returns An object containing the payload data.
+   * @throws Error if the form context or button setting is not set.
+   */
+  public getPayload(): Record<string, unknown> {
     if (!this.formContext || !this.buttonSetting) {
       throw new Error("Form context or button setting is not set.");
     }
@@ -168,25 +85,12 @@ export class ButtonHelper {
     return payload;
   }
 
-  async makeRequest(method: string, url: string, body?: unknown): Promise<Response> {
-    const headers = {
-      "Content-Type": "application/json",
-      "OData-MaxVersion": "4.0",
-      "OData-Version": "4.0",
-      Accept: "application/json",
-      Prefer: "odata.include-annotations=*",
-    };
-
-    const options: RequestInit = {
-      method,
-      headers,
-      body: body ? JSON.stringify(body) : undefined,
-    };
-
-    return fetch(url, options);
-  }
-
-  async openConfirmationDialogBeforeRun(): Promise<boolean> {
+  /**
+   * Opens a confirmation dialog before executing the button action.
+   *
+   * @returns A Promise that resolves to true if the user confirms the dialog, false otherwise.
+   */
+  public async openConfirmationDialogBeforeRun(): Promise<boolean> {
     if (!this.buttonAdvancedSetting || this.buttonAdvancedSetting.esp_confirmationdialogtext == null) {
       await ExceptionLowCodeButton.showFormNotificationGenericError(
         "Confirmation Dialog Text Error",
@@ -205,7 +109,12 @@ export class ButtonHelper {
     return result.confirmed;
   }
 
-  async openSuccessDialogSync(): Promise<boolean> {
+  /**
+   * Opens a synchronous success dialog and awaits the user's confirmation.
+   *
+   * @returns A Promise that resolves to true if the success dialog is confirmed, or false otherwise.
+   */
+  public async openSuccessDialogSync(): Promise<boolean> {
     if (!this.buttonAdvancedSetting || this.buttonAdvancedSetting.esp_syncconfirmationboxtext == null) {
       await ExceptionLowCodeButton.showFormNotificationGenericError(
         "Sync Confirmation Box Text Error",
@@ -222,7 +131,13 @@ export class ButtonHelper {
     return result.confirmed;
   }
 
-  openSuccessDialogRedirect(response: RedirectResponse): void {
+  /**
+   * Opens a success dialog that may redirect the user based on their confirmation.
+   * If the user confirms, the browser is redirected; otherwise, the form is reloaded.
+   *
+   * @param response - An object containing the redirect URI.
+   */
+  public openSuccessDialogRedirect(response: RedirectResponse): void {
     if (!this.buttonAdvancedSetting) {
       throw new Error("Button advanced setting is not set.");
     }
@@ -258,7 +173,12 @@ export class ButtonHelper {
     });
   }
 
-  reloadForm(): void {
+  /**
+   * Reloads the current form.
+   *
+   * @throws Error if the form context, button setting, or advanced setting is not set.
+   */
+  public reloadForm(): void {
     if (!this.formContext || !this.buttonSetting || !this.buttonAdvancedSetting) {
       throw new Error("Required properties are not set for reloading the form.");
     }
@@ -274,7 +194,12 @@ export class ButtonHelper {
     }
   }
 
-  async asyncFormNotification(): Promise<void> {
+  /**
+   * Displays an asynchronous form notification for 5 seconds.
+   *
+   * @returns A Promise that resolves when the notification is cleared.
+   */
+  public async asyncFormNotification(): Promise<void> {
     if (
       !this.formContext ||
       !this.buttonAdvancedSetting ||
@@ -296,14 +221,24 @@ export class ButtonHelper {
     }, 5000);
   }
 
-  clearFormNotification(): void {
+  /**
+   * Clears the form notification from the current form.
+   *
+   * @throws Error if the form context is not set.
+   */
+  public clearFormNotification(): void {
     if (!this.formContext) {
       throw new Error("Form context is not set.");
     }
     this.formContext.ui.clearFormNotification("LowCodeButtonFormNotification");
   }
 
-  async syncFormNotification(): Promise<void> {
+  /**
+   * Displays a synchronous form notification for 120 seconds.
+   *
+   * @returns A Promise that resolves when the notification is cleared.
+   */
+  public async syncFormNotification(): Promise<void> {
     if (
       !this.formContext ||
       !this.buttonAdvancedSetting ||
@@ -325,7 +260,12 @@ export class ButtonHelper {
     }, 120000);
   }
 
-  async showSuccessFormNotification(): Promise<void> {
+  /**
+   * Displays a success form notification for 5 seconds.
+   *
+   * @returns A Promise that resolves when the notification is cleared.
+   */
+  public async showSuccessFormNotification(): Promise<void> {
     if (
       !this.formContext ||
       !this.buttonAdvancedSetting ||
@@ -347,7 +287,10 @@ export class ButtonHelper {
     }, 5000);
   }
 
-  clearSyncNotifications(): void {
+  /**
+   * Clears all synchronous notifications including form notifications and progress indicators.
+   */
+  public clearSyncNotifications(): void {
     if (this.buttonAdvancedSetting?.esp_syncformnotification) {
       this.clearFormNotification();
     }

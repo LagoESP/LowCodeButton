@@ -1,70 +1,32 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable camelcase */
 import { esp_buttonadvancedsetting_esp_buttonadvancedsetting_esp_executionmode } from "./dataverse-gen";
 import { ExceptionLowCodeButton } from "./Exceptions/ButtonException";
-import { ButtonHelper } from "./Helpers/FormBaseButtonHelper";
+import { ButtonFormHelper } from "./Helpers/ButtonFormHelper";
 import { ErrorMessageResponse, RedirectResponse } from "./Models/BaseButtonResponseModels";
 
-export class ButtonRegistration {
-  static determineContext(control: unknown): "form" | "grid" | "subgrid" | "unknown" {
-    // Check if control is a form context
-    if ((control as Xrm.FormContext).data) {
-      alert("The control is on a main form.");
-      return "form";
-    }
-    // Check if control is a grid control
-    else if ((control as Xrm.Controls.GridControl).getGrid) {
-      // Differentiate between main grid and subgrid
-      if ((control as Xrm.Controls.GridControl).getParent && (control as Xrm.Controls.GridControl).getParent()) {
-        alert("The control is on a subgrid.");
-        return "subgrid";
-      } else {
-        alert("The control is on a main grid.");
-        return "grid";
-      }
-    }
-    alert("Unknown context.");
-    return "unknown";
-  }
-
+export class ButtonRegistrationForm {
+  /**
+   * Handles the onClick event for the button inside a Form.
+   * @param formContext - The form context.
+   * @param buttonSettingName - The name of the button setting.
+   */
   static async onClick(formContext: Xrm.FormContext, buttonSettingName: string) {
-    // Create a buttonHelper instance with the form context
-    const buttonHelper = new ButtonHelper(formContext);
+    const buttonHelper = new ButtonFormHelper(formContext);
+    await buttonHelper.initializeSettings(buttonSettingName);
 
-    // Get language code and fetch the button setting
-    const languageCode = buttonHelper.getLanguageCode();
-    const buttonSetting = await buttonHelper.getButtonSetting(buttonSettingName);
-    if (!buttonSetting) {
-      ExceptionLowCodeButton.buttonSettingNotFound(buttonSettingName);
-      return;
-    }
-
-    // Fetch the advanced setting using the button setting ID and language code
-    const buttonAdvancedSetting = await buttonHelper.getButtonAdvancedSetting(
-      buttonSetting.esp_buttonsettingid ?? "",
-      languageCode,
-    );
-    if (!buttonAdvancedSetting) {
-      await ExceptionLowCodeButton.buttonAdvancedSettingNotFound(languageCode);
-      return;
-    }
-
-    // Optionally show a confirmation dialog before proceeding
-    if (buttonAdvancedSetting.esp_showconfirmationdialog) {
+    if (buttonHelper.buttonAdvancedSetting!.esp_showconfirmationdialog) {
       const confirmation = await buttonHelper.openConfirmationDialogBeforeRun();
       if (!confirmation) {
         return;
       }
     }
 
-    // Save the form if it is dirty and the configuration requires it
-    if (formContext.data.entity.getIsDirty() && buttonSetting.esp_savebeforerunning) {
+    if (formContext.data.entity.getIsDirty() && buttonHelper.buttonSetting!.esp_savebeforerunning) {
       console.log("Saving form before running the button");
       await formContext.data.save();
     }
 
-    // Ensure the endpoint is set before making a request
-    if (!buttonSetting.esp_endpoint) {
+    if (!buttonHelper.buttonSetting!.esp_endpoint) {
       await ExceptionLowCodeButton.showFormNotificationGenericError(
         "Endpoint Not Set",
         "The endpoint for the button is not set. Please set it up in the button settings.",
@@ -72,9 +34,8 @@ export class ButtonRegistration {
       return;
     }
 
-    // Execute in async or sync mode based on the advanced setting
     if (
-      buttonAdvancedSetting.esp_executionmode ===
+      buttonHelper.buttonAdvancedSetting!.esp_executionmode ===
       esp_buttonadvancedsetting_esp_buttonadvancedsetting_esp_executionmode.Async
     ) {
       await this.executeAsync(buttonHelper);
@@ -83,7 +44,11 @@ export class ButtonRegistration {
     }
   }
 
-  static async executeAsync(buttonHelper: ButtonHelper) {
+  /**
+   * Executes an asynchronous HTTP call.
+   * @param buttonHelper - The initialized ButtonFormHelper instance.
+   */
+  static async executeAsync(buttonHelper: ButtonFormHelper) {
     const { buttonSetting, buttonAdvancedSetting } = buttonHelper;
     console.log(`Executing async call to ${buttonSetting?.esp_endpoint}`);
     if (buttonAdvancedSetting?.esp_asyncformnotification) {
@@ -95,7 +60,11 @@ export class ButtonRegistration {
     });
   }
 
-  static async executeSync(buttonHelper: ButtonHelper) {
+  /**
+   * Executes a synchronous HTTP call.
+   * @param buttonHelper - The initialized ButtonFormHelper instance.
+   */
+  static async executeSync(buttonHelper: ButtonFormHelper) {
     const { buttonSetting, buttonAdvancedSetting } = buttonHelper;
     console.log(`Executing sync call to ${buttonSetting?.esp_endpoint}`);
     if (buttonAdvancedSetting?.esp_syncformnotification) {
