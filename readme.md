@@ -244,5 +244,5 @@ Licensed under the [Creative Commons Attribution-NonCommercial-ShareAlike (CC BY
 
 For support, contact:
 
-- **José Lago**: [LinkedIn](https://www.linkedin.com/in/martinezlago/) | [jose@lago.dev](mailto:jose@lago.dev)
+- **José Martínez Lago**: [LinkedIn](https://www.linkedin.com/in/martinezlago/) | [jose@lago.dev](mailto:jose@lago.dev)
 - **Stephan Charles**: [LinkedIn](https://www.linkedin.com/in/stephan-charles-nielson/)
