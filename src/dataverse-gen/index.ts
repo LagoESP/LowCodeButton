@@ -4,6 +4,7 @@ export * from "./entities/esp_ButtonSetting";
 export * from "./entities/esp_Language";
 export * from "./enums/esp_buttonadvancedsetting_esp_buttonadvancedsetting_esp_executionmode";
 export * from "./enums/esp_buttonadvancedsetting_esp_buttonadvancedsetting_esp_syncconfirmationboxredirectmode";
+export * from "./enums/esp_buttonadvancedsetting_esp_buttonadvancedsetting_esp_syncconfirmationboxtype";
 export * from "./enums/esp_buttonadvancedsetting_esp_buttonadvancedsetting_statecode";
 export * from "./enums/esp_buttonadvancedsetting_esp_buttonadvancedsetting_statuscode";
 export * from "./enums/esp_buttonsetting_esp_buttonsetting_esp_buttonlocation";

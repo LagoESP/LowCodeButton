@@ -15,6 +15,7 @@ export const esp_buttonadvancedsettingMetadata = {
     // Optionsets
     esp_executionmode: "Optionset",
     esp_syncconfirmationboxredirectmode: "Optionset",
+    esp_syncconfirmationboxtype: "Optionset",
     statecode: "Optionset",
     statuscode: "Optionset",
     // Date Formats
@@ -60,9 +61,7 @@ export const enum esp_ButtonAdvancedSettingAttributes {
   esp_SettingLanguage = "esp_settinglanguage",
   esp_SettingLanguageName = "esp_settinglanguagename",
   esp_ShowConfirmationDialog = "esp_showconfirmationdialog",
-  esp_SyncConfirmationBox = "esp_syncconfirmationbox",
   esp_SyncConfirmationBoxConfirmLabel = "esp_syncconfirmationboxconfirmlabel",
-  esp_SyncConfirmationBoxRedirect = "esp_syncconfirmationboxredirect",
   esp_SyncConfirmationBoxRedirectCancelLabel = "esp_syncconfirmationboxredirectcancellabel",
   esp_SyncConfirmationBoxRedirectConfirmLabel = "esp_syncconfirmationboxredirectconfirmlabel",
   esp_SyncConfirmationBoxRedirectMode = "esp_syncconfirmationboxredirectmode",
@@ -71,6 +70,7 @@ export const enum esp_ButtonAdvancedSettingAttributes {
   esp_SyncConfirmationBoxRedirectTitle = "esp_syncconfirmationboxredirecttitle",
   esp_SyncConfirmationBoxText = "esp_syncconfirmationboxtext",
   esp_SyncConfirmationBoxTitle = "esp_syncconfirmationboxtitle",
+  esp_SyncConfirmationBoxType = "esp_syncconfirmationboxtype",
   esp_SyncFormNotification = "esp_syncformnotification",
   esp_SyncFormNotificationText = "esp_syncformnotificationtext",
   esp_SyncRefreshForm = "esp_syncrefreshform",
@@ -192,17 +192,9 @@ export interface esp_ButtonAdvancedSetting extends IEntity {
   */
   esp_showconfirmationdialog?: boolean | null;
   /*
-  Sync Confirmation Box BooleanType A field to toggle a confirmation box for sync button
-  */
-  esp_syncconfirmationbox?: boolean | null;
-  /*
   Sync Confirmation Box Confirm Label StringType The text for the confirmation button for the sync confirmation box
   */
   esp_syncconfirmationboxconfirmlabel?: string | null;
-  /*
-  Sync Confirmation Box Redirect BooleanType A field to toggle the sync confirmation box with redirect function
-  */
-  esp_syncconfirmationboxredirect?: boolean | null;
   /*
   Sync Confirmation Box Redirect Cancel Label StringType Label for cancel button in confirmation box with redirect function
   */
@@ -235,6 +227,10 @@ export interface esp_ButtonAdvancedSetting extends IEntity {
   Sync Confirmation Box Title StringType
   */
   esp_syncconfirmationboxtitle?: string | null;
+  /*
+  Sync Confirmation Box Type esp_buttonadvancedsetting_esp_buttonadvancedsetting_esp_syncconfirmationboxtype A field to toggle either the standard confirmation box or the redirect confirmation box
+  */
+  esp_syncconfirmationboxtype?: import("../enums/esp_buttonadvancedsetting_esp_buttonadvancedsetting_esp_syncconfirmationboxtype").esp_buttonadvancedsetting_esp_buttonadvancedsetting_esp_syncconfirmationboxtype | null;
   /*
   Sync Form Notification BooleanType A field to toggle the use of Sync Form Notifications
   */
