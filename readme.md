@@ -10,7 +10,7 @@ Low Code Button is a lightweight, customizable component designed for developers
 
 ### Download and Import
 
-1. **Download the latest managed solution** from the [releases section](https://github.com/yourusername/low-code-button/releases) of this repository.
+1. **Download the latest managed solution** from the [releases section](https://github.com/LagoESP/LowCodeButton/releases) of this repository.
 
 2. **Import the solution** into your Dynamics 365 environment:
 
