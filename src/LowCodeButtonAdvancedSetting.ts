@@ -92,10 +92,13 @@ export class FormLogic {
     if (boxValue == 0) {
       defaultBoxSection.setVisible(true);
       redirectBoxSection.setVisible(false);
-    } else {
+  } if (boxValue == 1) {
       redirectBoxSection.setVisible(true);
       defaultBoxSection.setVisible(false);
-    }
+  } else {
+      redirectBoxSection.setVisible(false);
+      defaultBoxSection.setVisible(false);
+  }
   }
 
   //On load functions
