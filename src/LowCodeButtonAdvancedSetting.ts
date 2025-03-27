@@ -1,4 +1,7 @@
+/* eslint-disable camelcase */
 /// <reference types="xrm" />
+
+import { esp_ButtonAdvancedSettingAttributes } from "./dataverse-gen";
 
 // Logic for form Onload and Onchange
 export class FormLogic {
@@ -229,7 +232,9 @@ export class OnSaveLogic {
     const formContext = executionContext.getFormContext();
 
     // 1) Retrieve attribute objects via casts
-    const showSyncAttr = formContext.getAttribute("esp_ExecutionMode") as Xrm.Attributes.OptionSetAttribute;
+    const showSyncAttr = formContext.getAttribute(
+      esp_ButtonAdvancedSettingAttributes.esp_ExecutionMode,
+    ) as Xrm.Attributes.OptionSetAttribute;
     const mainButtonAttr = formContext.getAttribute("esp_MainButtonSetting") as Xrm.Attributes.LookupAttribute;
 
     if (!showSyncAttr || !mainButtonAttr) {
@@ -333,6 +338,7 @@ export class OnSaveLogic {
       }
 
       // 9) Execute all update operations
+      debugger;
       if (updatePromises.length > 0) {
         await Promise.all(updatePromises);
         // Optionally, show a success notification or do further processing
