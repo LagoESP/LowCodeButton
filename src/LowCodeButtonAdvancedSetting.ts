@@ -162,8 +162,10 @@ export class OnSaveLogic {
     try {
       // 6) Query related records
       const baseHelper = new BaseHelper();
-      const result = await baseHelper.getAllButtonAdvancedSettingExceptTheGivenLCID(targetLookupId, formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_ButtonAdvancedSettingId)?.getValue());
+      const recordId = formContext.data.entity.getId(); 
+      const result = await baseHelper.getAllButtonAdvancedSettingExceptTheGivenLCID(targetLookupId, recordId.replace(/[{}]/g, ""));
 
+      console.log("We are here: "+targetLookupId+", "+recordId.replace(/[{}]/g, ""),", "+result)
       if (!result || result.length === 0) {
         return;
       }
