@@ -117,9 +117,6 @@ export class FormLogic {
   }
 }
 
-
-
-
 // Logic for Form Onsave
 export class OnSaveLogic {
   public static async onSaveDialogSection(executionContext: Xrm.Events.EventContext): Promise<void> {
@@ -185,7 +182,7 @@ export class OnSaveLogic {
         }
 
         // 8) Build the update object
-        let updateData: Record<string, any> | null = null;
+        let updateData: Record<string, unknown> | null = null;
 
         // If the current record's ShowConfirmationDialog is false => clear fields on the target record
         if (showDialogValue === false) {
@@ -224,7 +221,7 @@ export class OnSaveLogic {
         await Promise.all(updatePromises);
         // Optionally, show a success notification or do further processing
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error in OnSaveLogic for dialog:", error);
     }
   }
@@ -294,7 +291,7 @@ export class OnSaveLogic {
         }
 
         // 8) Build the update object
-        let updateData: Record<string, any> | null = null;
+        let updateData: Record<string, unknown> | null = null;
 
         // If the current record's ShowConfirmationDialog is false => clear fields on the target record
         if (showSyncValue === 0) {
@@ -340,7 +337,7 @@ export class OnSaveLogic {
         await Promise.all(updatePromises);
         // Optionally, show a success notification or do further processing
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error in OnSaveLogic for sync/async:", error);
     }
   }
@@ -411,7 +408,7 @@ export class OnSaveLogic {
         }
 
         // 8) Build the update object
-        let updateData: Record<string, any> | null = null;
+        let updateData: Record<string, unknown> | null = null;
 
         // If the current record's ShowConfirmationDialog is false => clear fields on the target record
         if (boxTypeValue === 0) {
@@ -461,14 +458,14 @@ export class OnSaveLogic {
         await Promise.all(updatePromises);
         // Optionally, show a success notification or do further processing
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error in OnSaveLogic for sync/async:", error);
     }
   }
-    //On save functions
-    public static onSave(executionContext: Xrm.Events.EventContext): void {
-      OnSaveLogic.onSaveDialogSection(executionContext);
-      OnSaveLogic.onSaveBoxSections(executionContext);
-      OnSaveLogic.onSaveSyncSections(executionContext);
-    }
+  //On save functions
+  public static onSave(executionContext: Xrm.Events.EventContext): void {
+    OnSaveLogic.onSaveDialogSection(executionContext);
+    OnSaveLogic.onSaveBoxSections(executionContext);
+    OnSaveLogic.onSaveSyncSections(executionContext);
+  }
 }

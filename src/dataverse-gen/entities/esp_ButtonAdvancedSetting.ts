@@ -57,6 +57,7 @@ export const enum esp_ButtonAdvancedSettingAttributes {
   esp_ExecutionMode = "esp_executionmode",
   esp_MainButtonSetting = "esp_mainbuttonsetting",
   esp_MainButtonSettingName = "esp_mainbuttonsettingname",
+  esp_ModificationNeededFlag = "esp_modificationneededflag",
   esp_SettingID = "esp_settingid",
   esp_SettingLanguage = "esp_settinglanguage",
   esp_SettingLanguageName = "esp_settinglanguagename",
@@ -176,6 +177,10 @@ export interface esp_ButtonAdvancedSetting extends IEntity {
   */
   esp_mainbuttonsettingname?: string | null;
   /*
+  Modification Needed Flag BooleanType
+  */
+  esp_modificationneededflag?: boolean | null;
+  /*
   Setting ID [Required] StringType
   */
   esp_settingid?: string;
@@ -192,7 +197,7 @@ export interface esp_ButtonAdvancedSetting extends IEntity {
   */
   esp_showconfirmationdialog?: boolean | null;
   /*
-  Sync Confirmation Box Confirm Label StringType The text for the confirmation button for the sync confirmation box
+  Sync Confirmation Box Confirm Label StringType Text for the confirmation button of the sync confirmation box
   */
   esp_syncconfirmationboxconfirmlabel?: string | null;
   /*
