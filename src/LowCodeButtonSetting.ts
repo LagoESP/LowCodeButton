@@ -4,22 +4,27 @@ import { esp_buttonsetting_esp_buttonsetting_esp_buttonlocation } from "./datave
 import { esp_ButtonSettingAttributes } from "./dataverse-gen/entities/esp_ButtonSetting";
 
 export class ButtonSetting {
-  public onLoad(formContext: Xrm.FormContext) {
-    const examplePayload = formContext.getControl(esp_ButtonSettingAttributes.esp_ShowExamplePayload) as any; // Needs to be cast to any to access setVisible
+  public static onLoad(executionContext: Xrm.Events.EventContext) {
+    const formContext = executionContext?.getFormContext() as Xrm.FormContext;
+    const examplePayload = formContext.getControl(esp_ButtonSettingAttributes.esp_ExamplePayload) as any; // Needs to be cast to any to access setVisible
     examplePayload.setVisible(formContext.getAttribute(esp_ButtonSettingAttributes.esp_ShowExamplePayload)?.getValue());
   }
 
-  public async onChange(formContext: Xrm.FormContext) {
-    const examplePayload = formContext.getControl(esp_ButtonSettingAttributes.esp_ShowExamplePayload) as any; // Needs to be cast to any to access setVisible
+  public static async onChange(executionContext: Xrm.Events.EventContext) {
+    const formContext = executionContext?.getFormContext() as Xrm.FormContext;
+    const examplePayload = formContext.getControl(esp_ButtonSettingAttributes.esp_ExamplePayload) as any; // Needs to be cast to any to access setVisible
     examplePayload.setVisible(formContext.getAttribute(esp_ButtonSettingAttributes.esp_ShowExamplePayload)?.getValue());
-    formContext
-      .getAttribute(esp_ButtonSettingAttributes.esp_ExamplePayload)
-      ?.setValue(this.setFormattedExamplePayload(formContext));
-    // Save the form
-    await formContext.data.save();
+    if (formContext.getAttribute(esp_ButtonSettingAttributes.esp_ShowExamplePayload)?.getValue()) {
+      formContext
+        .getAttribute(esp_ButtonSettingAttributes.esp_ExamplePayload)
+        ?.setValue(this.getFormattedExamplePayload(formContext));
+      if (formContext.data.getIsDirty() && formContext.ui.getFormType() === XrmEnum.FormType.Update) {
+        await formContext.data.save();
+      }
+    }
   }
 
-  private setFormattedExamplePayload(formContext: Xrm.FormContext): string {
+  private static getFormattedExamplePayload(formContext: Xrm.FormContext): string {
     let examplePayload: Record<string, unknown> = {};
     if (formContext.getAttribute(esp_ButtonSettingAttributes.esp_IncludeCallingUserIDinPayload)?.getValue()) {
       examplePayload = {
@@ -30,8 +35,8 @@ export class ButtonSetting {
     if (formContext.getAttribute(esp_ButtonSettingAttributes.esp_IncludeEntityLogicalNameinPayload)?.getValue()) {
       examplePayload = {
         ...examplePayload,
-        entityLogicalSingularName: "test",
-        entityLogicalPluralName: "tests",
+        entityLogicalSingularName: "account",
+        entityLogicalPluralName: "accounts",
       };
       if (
         formContext.getAttribute(esp_ButtonSettingAttributes.esp_ButtonLocation)?.getValue() ===
@@ -39,8 +44,8 @@ export class ButtonSetting {
       ) {
         examplePayload = {
           ...examplePayload,
-          parentEntityLogicalName: "test",
-          parentEntityLogicalPluralName: "tests",
+          parentEntityLogicalName: "contact",
+          parentEntityLogicalPluralName: "contacts",
         };
       }
     }
@@ -57,12 +62,22 @@ export class ButtonSetting {
       if (
         formContext.getAttribute(esp_ButtonSettingAttributes.esp_ButtonLocation)?.getValue() ===
           esp_buttonsetting_esp_buttonsetting_esp_buttonlocation.Grid ||
-        esp_buttonsetting_esp_buttonsetting_esp_buttonlocation.Subgrid
+        formContext.getAttribute(esp_ButtonSettingAttributes.esp_ButtonLocation)?.getValue() ===
+          esp_buttonsetting_esp_buttonsetting_esp_buttonlocation.Subgrid
       ) {
         examplePayload = {
           ...examplePayload,
           recordIds: ["Guid1", "Guid2"],
         };
+        if (
+          formContext.getAttribute(esp_ButtonSettingAttributes.esp_ButtonLocation)?.getValue() ===
+          esp_buttonsetting_esp_buttonsetting_esp_buttonlocation.Subgrid
+        ) {
+          examplePayload = {
+            ...examplePayload,
+            parentRecordId: "Guid",
+          };
+        }
       }
     }
     return JSON.stringify(examplePayload, null, 2);

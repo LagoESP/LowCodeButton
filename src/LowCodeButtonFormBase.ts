@@ -1,5 +1,8 @@
 /* eslint-disable camelcase */
-import { esp_buttonadvancedsetting_esp_buttonadvancedsetting_esp_executionmode } from "./dataverse-gen";
+import {
+  esp_buttonadvancedsetting_esp_buttonadvancedsetting_esp_executionmode,
+  esp_buttonadvancedsetting_esp_buttonadvancedsetting_esp_syncconfirmationboxtype,
+} from "./dataverse-gen";
 import { ExceptionLowCodeButton } from "./Exceptions/ButtonException";
 import { ButtonFormHelper } from "./Helpers/ButtonFormHelper";
 import { ErrorMessageResponse, RedirectResponse } from "./Models/BaseButtonResponseModels";
@@ -117,10 +120,16 @@ export class ButtonRegistrationForm {
       if (buttonAdvancedSetting?.esp_syncsuccessformnotification) {
         await buttonHelper.showSuccessFormNotification();
       }
-      if (buttonAdvancedSetting?.esp_syncconfirmationbox) {
+      if (
+        buttonAdvancedSetting?.esp_syncconfirmationboxtype ===
+        esp_buttonadvancedsetting_esp_buttonadvancedsetting_esp_syncconfirmationboxtype.Default
+      ) {
         await buttonHelper.openSuccessDialogSync();
       }
-      if (buttonAdvancedSetting?.esp_syncconfirmationboxredirect) {
+      if (
+        buttonAdvancedSetting?.esp_syncconfirmationboxtype ===
+        esp_buttonadvancedsetting_esp_buttonadvancedsetting_esp_syncconfirmationboxtype.Redirect
+      ) {
         const redirectResponse = RedirectResponse.fromJson(await response.text());
         buttonHelper.openSuccessDialogRedirect(redirectResponse);
       }

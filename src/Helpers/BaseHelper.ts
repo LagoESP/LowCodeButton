@@ -159,12 +159,11 @@ export class BaseHelper {
           <attribute name="esp_confirmationdialogtitle" />
           <attribute name="esp_executionmode" />
           <attribute name="esp_mainbuttonsetting" />
+          <attribute name="esp_modificationneededflag" />
           <attribute name="esp_settingid" />
           <attribute name="esp_settinglanguage" />
           <attribute name="esp_showconfirmationdialog" />
-          <attribute name="esp_syncconfirmationbox" />
           <attribute name="esp_syncconfirmationboxconfirmlabel" />
-          <attribute name="esp_syncconfirmationboxredirect" />
           <attribute name="esp_syncconfirmationboxredirectcancellabel" />
           <attribute name="esp_syncconfirmationboxredirectconfirmlabel" />
           <attribute name="esp_syncconfirmationboxredirectmode" />
@@ -173,6 +172,7 @@ export class BaseHelper {
           <attribute name="esp_syncconfirmationboxredirecttitle" />
           <attribute name="esp_syncconfirmationboxtext" />
           <attribute name="esp_syncconfirmationboxtitle" />
+          <attribute name="esp_syncconfirmationboxtype" />
           <attribute name="esp_syncformnotification" />
           <attribute name="esp_syncformnotificationtext" />
           <attribute name="esp_syncrefreshform" />
