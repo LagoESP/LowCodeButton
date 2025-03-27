@@ -101,6 +101,8 @@ Although the Command Bar Designer is recommended, Low Code Button remains fully 
 
 Using **Button Settings**, you can customize the payload to your liking, allowing you to include only the necessary data and exclude unnecessary fields to streamline your button integration.
 
+If needed, you can get a preview of the JSON Payload that will be sent to the specified endpoint, by setting the *Show Example Payload* to yes. This will give you an example payload that you can use to access Dynamic Context in your flow.
+
 The payload generated when interacting with buttons varies based on their type (Form or Grid/Subgrid):
 
 ### Form Button Payload

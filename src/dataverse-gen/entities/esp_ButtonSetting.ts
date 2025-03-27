@@ -46,11 +46,13 @@ export const enum esp_ButtonSettingAttributes {
   esp_ButtonName = "esp_buttonname",
   esp_ButtonSettingId = "esp_buttonsettingid",
   esp_Endpoint = "esp_endpoint",
+  esp_ExamplePayload = "esp_examplepayload",
   esp_IncludeCallingUserIDinPayload = "esp_includecallinguseridinpayload",
   esp_IncludeEntityLogicalNameinPayload = "esp_includeentitylogicalnameinpayload",
   esp_IncludeRecordIDinPayload = "esp_includerecordidinpayload",
   esp_RefreshWhenAPICallEnds = "esp_refreshwhenapicallends",
   esp_SaveBeforeRunning = "esp_savebeforerunning",
+  esp_ShowExamplePayload = "esp_showexamplepayload",
   ImportSequenceNumber = "importsequencenumber",
   ModifiedBy = "modifiedby",
   ModifiedByName = "modifiedbyname",
@@ -121,6 +123,10 @@ export interface esp_ButtonSetting extends IEntity {
   */
   esp_endpoint?: string;
   /*
+  Example Payload MemoType Example Payload for generating the Schema in Power Automate
+  */
+  esp_examplepayload?: string | null;
+  /*
   Include Calling User ID in Payload [Required] BooleanType Include Calling User ID in Payload
   */
   esp_includecallinguseridinpayload?: boolean;
@@ -140,6 +146,10 @@ export interface esp_ButtonSetting extends IEntity {
   Save Before Running [Required] BooleanType Saves the form before running, so Power Automate can fetch the freshest details.
   */
   esp_savebeforerunning?: boolean;
+  /*
+  Show Example Payload [Required] BooleanType Displays an example payload that can be used as a schema for Power Automate HTTP Trigger, in order to use the Dynamic Context from Power Automate in future steps.
+  */
+  esp_showexamplepayload?: boolean;
   /*
   Import Sequence Number IntegerType Sequence number of the import that created this record.
   */
