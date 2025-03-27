@@ -2,6 +2,7 @@
 /// <reference types="xrm" />
 
 import { esp_ButtonAdvancedSettingAttributes } from "./dataverse-gen";
+import { BaseHelper } from "./Helpers/BaseHelper";
 
 // Logic for form Onload and Onchange
 export class FormLogic {
@@ -160,13 +161,10 @@ export class OnSaveLogic {
 
     try {
       // 6) Query related records
-      const result = await Xrm.WebApi.retrieveMultipleRecords(
-        "esp_buttonadvancedsetting",
-        `?$select=esp_ConfirmationDialogTitle,esp_ConfirmationDialogText,esp_ConfirmationDialogSubtitle,esp_ConfirmationDialogCancelLabel,esp_ConfirmationDialogConfirmLabel,esp_ShowConfirmationDialog,esp_ConfirmationDialogFlag&$filter=${filter}`,
-      );
-      console.log("We are here: "+result)
+      const baseHelper = new BaseHelper();
+      const result = await baseHelper.getAllButtonAdvancedSettingExceptTheGivenLCID(targetLookupId, formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_ButtonAdvancedSettingId)?.getValue());
 
-      if (!result || !result.entities || result.entities.length === 0) {
+      if (!result || result.length === 0) {
         return;
       }
 
@@ -174,12 +172,9 @@ export class OnSaveLogic {
       //    updateRecord(...) returns a PromiseLike<{ entityType: string; id: string }>
       const updatePromises: Array<Xrm.Async.PromiseLike<{ entityType: string; id: string }>> = [];
 
-      for (const record of result.entities) {
+      for (const record of result) {
         // Identify the record ID field. Common patterns might be "esp_buttonadvancedsettingid"
-        const recordId =
-          record["esp_buttonadvancedsettingid"] ||
-          record["esp_ButtonAdvancedSettingId"] ||
-          record["esp_buttonadvancedsettingId"];
+        const recordId = record.esp_buttonadvancedsettingid;
 
         if (!recordId) {
           continue;
@@ -200,11 +195,11 @@ export class OnSaveLogic {
         }
         // If the current record's ShowConfirmationDialog is true => if any of these fields are empty on the target record, set esp_ModificationNeededFlag to true
         else if (showDialogValue === true) {
-          const targetTitle = record["esp_confirmationdialogtitle"];
-          const targetText = record["esp_confirmationdialogtext"];
-          const targetSubtitle = record["esp_confirmationdialogsubtitle"];
-          const targetCancel = record["esp_confirmationdialogcancellabel"];
-          const targetConfirm = record["esp_confirmationdialogconfirmlabel"];
+          const targetTitle = record.esp_confirmationdialogtitle;
+          const targetText = record.esp_confirmationdialogtext;
+          const targetSubtitle = record.esp_confirmationdialogsubtitle;
+          const targetCancel = record.esp_confirmationdialogcancellabel;
+          const targetConfirm = record.esp_confirmationdialogconfirmlabel;
 
           const anyEmpty = !targetTitle || !targetText || !targetSubtitle || !targetCancel || !targetConfirm;
           if (anyEmpty) {
