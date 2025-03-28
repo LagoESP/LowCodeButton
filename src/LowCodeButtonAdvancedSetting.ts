@@ -307,10 +307,6 @@ export class OnSaveLogic {
     const targetLookupId = mainButtonValue[0].id.replace(/[{}]/g, ""); // remove braces from GUID
     const languageId = languageValue[0].id.replace(/[{}]/g, ""); // remove braces from GUID
 
-    // Many lookups use a property like "_esp_mainbuttonsetting_value" for the relationship filter
-    // You may need quotes around the GUID depending on your environment: eq '${targetLookupId}'
-    const filter = `_$esp_mainbuttonsetting_value eq ${targetLookupId}`;
-
     try {
       // 6) Query related records
       const baseHelper = new BaseHelper();
@@ -440,10 +436,6 @@ export class OnSaveLogic {
     // 5) Retrieve all related esp_ButtonAdvancedSetting records that match the same esp_MainButtonSetting
     const targetLookupId = mainButtonValue[0].id.replace(/[{}]/g, ""); // remove braces from GUID
     const languageId = languageValue[0].id.replace(/[{}]/g, ""); // remove braces from GUID
-
-    // Many lookups use a property like "_esp_mainbuttonsetting_value" for the relationship filter
-    // You may need quotes around the GUID depending on your environment: eq '${targetLookupId}'
-    const filter = `_$esp_mainbuttonsetting_value eq ${targetLookupId}`;
 
     try {
       // 6) Query related records
