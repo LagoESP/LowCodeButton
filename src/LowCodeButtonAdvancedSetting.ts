@@ -129,6 +129,7 @@ export class OnSaveLogic {
     // 1) Retrieve attribute objects via casts
     const showDialogAttr = formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_ShowConfirmationDialog) as Xrm.Attributes.BooleanAttribute;
     const mainButtonAttr = formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_MainButtonSetting) as Xrm.Attributes.LookupAttribute;
+    const languageAttr = formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_SettingLanguage) as Xrm.Attributes.LookupAttribute;
 
     if (!showDialogAttr || !mainButtonAttr) {
       return; // Attributes not found
@@ -137,6 +138,7 @@ export class OnSaveLogic {
     // 2) Get the actual values
     const showDialogValue = showDialogAttr.getValue(); // true/false or null
     const mainButtonValue = mainButtonAttr.getValue(); // Array<Xrm.LookupValue> or null
+    const languageValue = languageAttr.getValue();
 
     // 3) If esp_ShowConfirmationDialog is false, clear the specified fields on the current record
     if (showDialogValue === false) {
@@ -151,9 +153,13 @@ export class OnSaveLogic {
     if (!mainButtonValue || mainButtonValue.length === 0 || !mainButtonValue[0].id) {
       return;
     }
+    if (!languageValue || languageValue.length === 0 || !languageValue[0].id) {
+      return;
+    }
 
     // 5) Retrieve all related esp_ButtonAdvancedSetting records that match the same esp_MainButtonSetting
     const targetLookupId = mainButtonValue[0].id.replace(/[{}]/g, ""); // remove braces from GUID
+    const languageId = languageValue[0].id.replace(/[{}]/g, ""); // remove braces from GUID
 
     // Many lookups use a property like "_esp_mainbuttonsetting_value" for the relationship filter
     // You may need quotes around the GUID depending on your environment: eq '${targetLookupId}'
@@ -162,10 +168,9 @@ export class OnSaveLogic {
     try {
       // 6) Query related records
       const baseHelper = new BaseHelper();
-      const recordId = formContext.data.entity.getId(); 
-      const result = await baseHelper.getAllButtonAdvancedSettingExceptTheGivenLCID(targetLookupId, recordId.replace(/[{}]/g, ""));
+      const result = await baseHelper.getAllButtonAdvancedSettingExceptTheGivenLCID(targetLookupId, languageId);
 
-      console.log("We are here: "+targetLookupId+", "+recordId.replace(/[{}]/g, ""),", "+result)
+      console.log("We are here: "+targetLookupId+", "+languageId,", "+result)
       if (!result || result.length === 0) {
         return;
       }
