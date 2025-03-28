@@ -127,9 +127,15 @@ export class OnSaveLogic {
     const formContext = executionContext.getFormContext();
 
     // 1) Retrieve attribute objects via casts
-    const showDialogAttr = formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_ShowConfirmationDialog) as Xrm.Attributes.BooleanAttribute;
-    const mainButtonAttr = formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_MainButtonSetting) as Xrm.Attributes.LookupAttribute;
-    const languageAttr = formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_SettingLanguage) as Xrm.Attributes.LookupAttribute;
+    const showDialogAttr = formContext.getAttribute(
+      esp_ButtonAdvancedSettingAttributes.esp_ShowConfirmationDialog,
+    ) as Xrm.Attributes.BooleanAttribute;
+    const mainButtonAttr = formContext.getAttribute(
+      esp_ButtonAdvancedSettingAttributes.esp_MainButtonSetting,
+    ) as Xrm.Attributes.LookupAttribute;
+    const languageAttr = formContext.getAttribute(
+      esp_ButtonAdvancedSettingAttributes.esp_SettingLanguage,
+    ) as Xrm.Attributes.LookupAttribute;
 
     if (!showDialogAttr || !mainButtonAttr) {
       return; // Attributes not found
@@ -161,16 +167,12 @@ export class OnSaveLogic {
     const targetLookupId = mainButtonValue[0].id.replace(/[{}]/g, ""); // remove braces from GUID
     const languageId = languageValue[0].id.replace(/[{}]/g, ""); // remove braces from GUID
 
-    // Many lookups use a property like "_esp_mainbuttonsetting_value" for the relationship filter
-    // You may need quotes around the GUID depending on your environment: eq '${targetLookupId}'
-    const filter = `_$esp_mainbuttonsetting_value eq ${targetLookupId}`;
-
     try {
       // 6) Query related records
       const baseHelper = new BaseHelper();
       const result = await baseHelper.getAllButtonAdvancedSettingExceptTheGivenLCID(targetLookupId, languageId);
 
-      console.log("We are here: "+targetLookupId+", "+languageId,", "+result)
+      console.log("We are here: " + targetLookupId + ", " + languageId, ", " + result);
       if (!result || result.length === 0) {
         return;
       }
@@ -193,11 +195,12 @@ export class OnSaveLogic {
         // If the current record's ShowConfirmationDialog is false => clear fields on the target record
         if (showDialogValue === false) {
           updateData = {
+            esp_showconfirmationdialog: false,
             esp_confirmationdialogtitle: null,
             esp_confirmationdialogtext: null,
             esp_confirmationdialogsubtitle: null,
-            esp_confirmationdialogcancelLabel: null,
-            esp_confirmationdialogconfirmLabel: null,
+            esp_confirmationdialogcancellabel: null,
+            esp_confirmationdialogconfirmlabel: null,
           };
         }
         // If the current record's ShowConfirmationDialog is true => if any of these fields are empty on the target record, set esp_ModificationNeededFlag to true
@@ -211,6 +214,7 @@ export class OnSaveLogic {
           const anyEmpty = !targetTitle || !targetText || !targetSubtitle || !targetCancel || !targetConfirm;
           if (anyEmpty) {
             updateData = {
+              esp_showconfirmationdialog: true,
               esp_modificationneededflag: true,
             };
           }
@@ -235,8 +239,12 @@ export class OnSaveLogic {
     const formContext = executionContext.getFormContext();
 
     // 1) Retrieve attribute objects via casts
-    const showSyncAttr = formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_ExecutionMode) as Xrm.Attributes.OptionSetAttribute;
-    const mainButtonAttr = formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_MainButtonSetting) as Xrm.Attributes.LookupAttribute;
+    const showSyncAttr = formContext.getAttribute(
+      esp_ButtonAdvancedSettingAttributes.esp_ExecutionMode,
+    ) as Xrm.Attributes.OptionSetAttribute;
+    const mainButtonAttr = formContext.getAttribute(
+      esp_ButtonAdvancedSettingAttributes.esp_MainButtonSetting,
+    ) as Xrm.Attributes.LookupAttribute;
 
     if (!showSyncAttr || !mainButtonAttr) {
       return; // Attributes not found
@@ -352,8 +360,12 @@ export class OnSaveLogic {
     const formContext = executionContext.getFormContext();
 
     // 1) Retrieve attribute objects via casts
-    const boxTypeAttr = formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_SyncConfirmationBoxType) as Xrm.Attributes.OptionSetAttribute;
-    const mainButtonAttr = formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_MainButtonSetting) as Xrm.Attributes.LookupAttribute;
+    const boxTypeAttr = formContext.getAttribute(
+      esp_ButtonAdvancedSettingAttributes.esp_SyncConfirmationBoxType,
+    ) as Xrm.Attributes.OptionSetAttribute;
+    const mainButtonAttr = formContext.getAttribute(
+      esp_ButtonAdvancedSettingAttributes.esp_MainButtonSetting,
+    ) as Xrm.Attributes.LookupAttribute;
 
     if (!boxTypeAttr || !mainButtonAttr) {
       return; // Attributes not found
@@ -365,11 +377,19 @@ export class OnSaveLogic {
 
     // 3) Deppending on esp_ExecutionMode, clear the specified fields on the current record
     if (boxTypeValue === 0) {
-      formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_SyncConfirmationBoxRedirectCancelLabel)?.setValue(null);
-      formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_SyncConfirmationBoxRedirectConfirmLabel)?.setValue(null);
-      formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_SyncConfirmationBoxRedirectSubtitle)?.setValue(null);
+      formContext
+        .getAttribute(esp_ButtonAdvancedSettingAttributes.esp_SyncConfirmationBoxRedirectCancelLabel)
+        ?.setValue(null);
+      formContext
+        .getAttribute(esp_ButtonAdvancedSettingAttributes.esp_SyncConfirmationBoxRedirectConfirmLabel)
+        ?.setValue(null);
+      formContext
+        .getAttribute(esp_ButtonAdvancedSettingAttributes.esp_SyncConfirmationBoxRedirectSubtitle)
+        ?.setValue(null);
       formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_SyncConfirmationBoxRedirectText)?.setValue(null);
-      formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_SyncConfirmationBoxRedirectTitle)?.setValue(null);
+      formContext
+        .getAttribute(esp_ButtonAdvancedSettingAttributes.esp_SyncConfirmationBoxRedirectTitle)
+        ?.setValue(null);
     } else if (boxTypeValue === 1) {
       formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_SyncConfirmationBoxConfirmLabel)?.setValue(null);
       formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_SyncConfirmationBoxText)?.setValue(null);
