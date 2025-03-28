@@ -215,7 +215,7 @@ export class BaseHelper {
    */
   public async getAllButtonAdvancedSettingExceptTheGivenLCID(
     mainButtonSettingId: string,
-    languageId: string,
+    languageId: string = "",
   ): Promise<esp_ButtonAdvancedSetting[]> {
     const fetchXml = `
       <fetch>
@@ -288,9 +288,8 @@ export class BaseHelper {
     );
 
     const filter = allButtonAdvancedSettings.map((setting) => {
-      return `<condition attribute="esp_buttonadvancedsettingid" operator="ne" value="${setting.esp_buttonadvancedsettingid}" />`;
+      return `<condition attribute="esp_languageid" operator="ne" value="${setting._esp_settinglanguage_value}" />`;
     });
-    debugger;
 
     return "<filter type='and'>" + filter.join("") + "</filter>";
   }

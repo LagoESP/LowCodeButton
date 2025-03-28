@@ -21,13 +21,14 @@ export class FormLogic {
     if (language) {
       languageId = language[0].id.replace(/[{}]/g, "");
     }
-    debugger;
     const filter = await helper.getFilterLookupForLanguage(mainButtonSettingId, languageId);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const lookup = formContext.getControl("esp_settinglanguage") as any; // Need to cast to any to access addCustomFilter
     debugger;
     if (lookup) {
-      lookup.addCustomFilter(filter);
+      lookup.addPreSearch(() => {
+        lookup.addCustomFilter(filter);
+      });
     }
   }
   public static toggleDialogSection(executionContext: Xrm.Events.EventContext): void {
@@ -135,7 +136,6 @@ export class FormLogic {
     FormLogic.toggleDialogSection(executionContext);
     FormLogic.toggleSyncSection(executionContext);
     FormLogic.toggleBoxSection(executionContext);
-    await FormLogic.filterLanguage(executionContext);
   }
 
   //On change functions
