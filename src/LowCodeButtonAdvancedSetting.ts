@@ -89,10 +89,10 @@ export class FormLogic {
     if (syncValue == 0) {
       syncSection.setVisible(true);
       asyncSection.setVisible(false);
-      formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_SyncConfirmationBoxType)?.setValue(null);
     } else {
       asyncSection.setVisible(true);
       syncSection.setVisible(false);
+      formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_SyncConfirmationBoxType)?.setValue(null);
     }
   }
 
