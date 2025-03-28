@@ -213,6 +213,71 @@ export class BaseHelper {
    * @param languageId - The language code to exclude.
    * @returns A Promise that resolves to an array of esp_ButtonAdvancedSetting.
    */
+  public async getAllButtonAdvancedSetting(mainButtonSettingId: string): Promise<esp_ButtonAdvancedSetting[]> {
+    const fetchXml = `
+        <fetch>
+          <entity name="esp_buttonadvancedsetting">
+            <attribute name="esp_asyncformnotification" />
+            <attribute name="esp_asyncformnotificationtext" />
+            <attribute name="esp_buttonadvancedsettingid" />
+            <attribute name="esp_confirmationdialogcancellabel" />
+            <attribute name="esp_confirmationdialogconfirmlabel" />
+            <attribute name="esp_confirmationdialogsubtitle" />
+            <attribute name="esp_confirmationdialogtext" />
+            <attribute name="esp_confirmationdialogtitle" />
+            <attribute name="esp_executionmode" />
+            <attribute name="esp_mainbuttonsetting" />
+            <attribute name="esp_modificationneededflag" />
+            <attribute name="esp_settingid" />
+            <attribute name="esp_settinglanguage" />
+            <attribute name="esp_showconfirmationdialog" />
+            <attribute name="esp_syncconfirmationboxconfirmlabel" />
+            <attribute name="esp_syncconfirmationboxredirectcancellabel" />
+            <attribute name="esp_syncconfirmationboxredirectconfirmlabel" />
+            <attribute name="esp_syncconfirmationboxredirectmode" />
+            <attribute name="esp_syncconfirmationboxredirectsubtitle" />
+            <attribute name="esp_syncconfirmationboxredirecttext" />
+            <attribute name="esp_syncconfirmationboxredirecttitle" />
+            <attribute name="esp_syncconfirmationboxtext" />
+            <attribute name="esp_syncconfirmationboxtitle" />
+            <attribute name="esp_syncconfirmationboxtype" />
+            <attribute name="esp_syncformnotification" />
+            <attribute name="esp_syncformnotificationtext" />
+            <attribute name="esp_syncrefreshform" />
+            <attribute name="esp_syncspinner" />
+            <attribute name="esp_syncspinnertext" />
+            <attribute name="esp_syncsuccessformnotification" />
+            <attribute name="esp_syncsuccessformnotificationtext" />
+            <filter>
+              <condition attribute="esp_mainbuttonsetting" operator="eq" value="${mainButtonSettingId}" />
+            </filter>
+          </entity>
+        </fetch>
+      `;
+
+    const query = `?fetchXml=${encodeURIComponent(fetchXml)}`;
+    const url = `${Xrm.Utility.getGlobalContext().getClientUrl()}/api/data/v9.1/esp_buttonadvancedsettings${query}`;
+
+    try {
+      const response = await this.makeRequest("GET", url);
+      const data = await response.json();
+      return data.value as esp_ButtonAdvancedSetting[];
+    } catch {
+      ExceptionLowCodeButton.displayGenericErrorNotification(
+        "Error",
+        "Error while fetching the advanced button settings except the given LCID. Function name: getAllButtonAdvancedSettingExceptTheGivenLCID",
+      );
+      return [];
+    }
+  }
+
+  /**
+   * Retrieves all advanced button settings except the given LCID.
+   *
+   * @param mainButtonSettingId - The ID of the main button setting.
+   * @param languageId - The language code to exclude.
+   * @returns A Promise that resolves to an array of esp_ButtonAdvancedSetting.
+   */
   public async getAllButtonAdvancedSettingExceptTheGivenLCID(
     mainButtonSettingId: string,
     languageId: string = "",

@@ -2,10 +2,12 @@
 /* eslint-disable camelcase */
 import { esp_buttonsetting_esp_buttonsetting_esp_buttonlocation } from "./dataverse-gen";
 import { esp_ButtonSettingAttributes } from "./dataverse-gen/entities/esp_ButtonSetting";
+import { BaseHelper } from "./Helpers/BaseHelper";
 
 export class ButtonSetting {
-  public static onLoad(executionContext: Xrm.Events.EventContext) {
+  public static async onLoad(executionContext: Xrm.Events.EventContext) {
     const formContext = executionContext?.getFormContext() as Xrm.FormContext;
+    await this.checkAdvancedButtonSettings(executionContext);
     const examplePayload = formContext.getControl(esp_ButtonSettingAttributes.esp_ExamplePayload) as any; // Needs to be cast to any to access setVisible
     examplePayload.setVisible(formContext.getAttribute(esp_ButtonSettingAttributes.esp_ShowExamplePayload)?.getValue());
   }
@@ -22,6 +24,30 @@ export class ButtonSetting {
         await formContext.data.save();
       }
     }
+  }
+
+  public static async checkAdvancedButtonSettings(executionContext: Xrm.Events.EventContext) {
+    const formContext = executionContext?.getFormContext() as Xrm.FormContext;
+    const helper = new BaseHelper();
+    const currentRecord = formContext.data.entity.getEntityReference();
+    const buttonSettings = await helper.getAllButtonAdvancedSetting(currentRecord.id);
+    let anyRecordFlagged = false;
+    debugger;
+    buttonSettings.forEach((buttonSetting) => {
+      if (buttonSetting.esp_modificationneededflag) {
+        anyRecordFlagged = true;
+      }
+    });
+    if (anyRecordFlagged) {
+      formContext.ui.setFormNotification(
+        "Some of the advanced button settings need to be properly configured. Please review the records using the 'Advanced Button Settings with Errors' subgrid.",
+        XrmEnum.FormNotificationLevel.Warning,
+        "ModificationNeeded",
+      );
+    }
+    (formContext.getControl("advanced_settings_error") as unknown as Xrm.Controls.UiStandardElement).setVisible(
+      anyRecordFlagged,
+    );
   }
 
   private static getFormattedExamplePayload(formContext: Xrm.FormContext): string {
