@@ -206,6 +206,13 @@ export class BaseHelper {
     }
   }
 
+  /**
+   * Retrieves all advanced button settings except the given LCID.
+   *
+   * @param mainButtonSettingId - The ID of the main button setting.
+   * @param languageId - The language code to exclude.
+   * @returns A Promise that resolves to an array of esp_ButtonAdvancedSetting.
+   */
   public async getAllButtonAdvancedSettingExceptTheGivenLCID(
     mainButtonSettingId: string,
     languageId: string,
@@ -256,7 +263,6 @@ export class BaseHelper {
     const url = `${Xrm.Utility.getGlobalContext().getClientUrl()}/api/data/v9.1/esp_buttonadvancedsettings${query}`;
 
     try {
-      debugger;
       const response = await this.makeRequest("GET", url);
       const data = await response.json();
       return data.value as esp_ButtonAdvancedSetting[];
@@ -268,6 +274,27 @@ export class BaseHelper {
       return [];
     }
   }
+
+  /**
+   * Provides the filter for the lookup field in the advanced button setting form, which filters out the other existing advanced button settings for the same button setting, avoiding letting you choose a duplicate language.
+   *
+   * @param buttonAdvancedSetting - The advanced button setting to use for the query.
+   * @returns A Promise that resolves to the ID of the advanced button setting.
+   */
+  public async getFilterLookupForLanguage(mainButtonSettingId: string, languageId: string): Promise<string> {
+    const allButtonAdvancedSettings = await this.getAllButtonAdvancedSettingExceptTheGivenLCID(
+      mainButtonSettingId,
+      languageId,
+    );
+
+    const filter = allButtonAdvancedSettings.map((setting) => {
+      return `<condition attribute="esp_buttonadvancedsettingid" operator="ne" value="${setting.esp_buttonadvancedsettingid}" />`;
+    });
+    debugger;
+
+    return "<filter type='and'>" + filter.join("") + "</filter>";
+  }
+
   /**
    * Initializes settings by retrieving the button setting (using its name) and then the advanced button setting.
    *

@@ -6,6 +6,30 @@ import { BaseHelper } from "./Helpers/BaseHelper";
 
 // Logic for form Onload and Onchange
 export class FormLogic {
+  public static async filterLanguage(executionContext: Xrm.Events.EventContext): Promise<void> {
+    const formContext = executionContext.getFormContext();
+    const helper = new BaseHelper();
+    const mainButtonSetting = formContext
+      .getAttribute(esp_ButtonAdvancedSettingAttributes.esp_MainButtonSetting)
+      ?.getValue();
+    const language = formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_SettingLanguage)?.getValue();
+    if (!mainButtonSetting) {
+      return;
+    }
+    const mainButtonSettingId = mainButtonSetting[0].id.replace(/[{}]/g, "");
+    let languageId = "";
+    if (language) {
+      languageId = language[0].id.replace(/[{}]/g, "");
+    }
+    debugger;
+    const filter = await helper.getFilterLookupForLanguage(mainButtonSettingId, languageId);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const lookup = formContext.getControl("esp_settinglanguage") as any; // Need to cast to any to access addCustomFilter
+    debugger;
+    if (lookup) {
+      lookup.addCustomFilter(filter);
+    }
+  }
   public static toggleDialogSection(executionContext: Xrm.Events.EventContext): void {
     const formContext = executionContext.getFormContext();
 
@@ -107,10 +131,11 @@ export class FormLogic {
   }
 
   //On load functions
-  public static onLoad(executionContext: Xrm.Events.EventContext): void {
+  public static async onLoad(executionContext: Xrm.Events.EventContext): Promise<void> {
     FormLogic.toggleDialogSection(executionContext);
     FormLogic.toggleSyncSection(executionContext);
     FormLogic.toggleBoxSection(executionContext);
+    await FormLogic.filterLanguage(executionContext);
   }
 
   //On change functions
@@ -347,7 +372,6 @@ export class OnSaveLogic {
       }
 
       // 9) Execute all update operations
-      debugger;
       if (updatePromises.length > 0) {
         await Promise.all(updatePromises);
         // Optionally, show a success notification or do further processing
