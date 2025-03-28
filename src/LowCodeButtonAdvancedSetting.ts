@@ -89,6 +89,7 @@ export class FormLogic {
     if (syncValue == 0) {
       syncSection.setVisible(true);
       asyncSection.setVisible(false);
+      formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_SyncConfirmationBoxType)?.setValue(null);
     } else {
       asyncSection.setVisible(true);
       syncSection.setVisible(false);
@@ -197,7 +198,6 @@ export class OnSaveLogic {
       const baseHelper = new BaseHelper();
       const result = await baseHelper.getAllButtonAdvancedSettingExceptTheGivenLCID(targetLookupId, languageId);
 
-      console.log("We are here: " + targetLookupId + ", " + languageId, ", " + result);
       if (!result || result.length === 0) {
         return;
       }
@@ -270,6 +270,9 @@ export class OnSaveLogic {
     const mainButtonAttr = formContext.getAttribute(
       esp_ButtonAdvancedSettingAttributes.esp_MainButtonSetting,
     ) as Xrm.Attributes.LookupAttribute;
+    const languageAttr = formContext.getAttribute(
+      esp_ButtonAdvancedSettingAttributes.esp_SettingLanguage,
+    ) as Xrm.Attributes.LookupAttribute;
 
     if (!showSyncAttr || !mainButtonAttr) {
       return; // Attributes not found
@@ -278,6 +281,7 @@ export class OnSaveLogic {
     // 2) Get the actual values
     const showSyncValue = showSyncAttr.getValue(); // true/false or null
     const mainButtonValue = mainButtonAttr.getValue(); // Array<Xrm.LookupValue> or null
+    const languageValue = languageAttr.getValue();
 
     // 3) Deppending on esp_ExecutionMode, clear the specified fields on the current record
     if (showSyncValue === 0) {
@@ -295,9 +299,13 @@ export class OnSaveLogic {
     if (!mainButtonValue || mainButtonValue.length === 0 || !mainButtonValue[0].id) {
       return;
     }
+    if (!languageValue || languageValue.length === 0 || !languageValue[0].id) {
+      return;
+    }
 
     // 5) Retrieve all related esp_ButtonAdvancedSetting records that match the same esp_MainButtonSetting
     const targetLookupId = mainButtonValue[0].id.replace(/[{}]/g, ""); // remove braces from GUID
+    const languageId = languageValue[0].id.replace(/[{}]/g, ""); // remove braces from GUID
 
     // Many lookups use a property like "_esp_mainbuttonsetting_value" for the relationship filter
     // You may need quotes around the GUID depending on your environment: eq '${targetLookupId}'
@@ -305,12 +313,10 @@ export class OnSaveLogic {
 
     try {
       // 6) Query related records
-      const result = await Xrm.WebApi.retrieveMultipleRecords(
-        "esp_buttonadvancedsetting",
-        `?$select=esp_AsyncFormNotificationText,esp_SyncFormNotificationText,esp_SyncSpinnerText,esp_SyncSuccessFormNotificationText,esp_SyncConfirmationBoxType,esp_ConfirmationDialogFlag&$filter=${filter}`,
-      );
+      const baseHelper = new BaseHelper();
+      const result = await baseHelper.getAllButtonAdvancedSettingExceptTheGivenLCID(targetLookupId, languageId);
 
-      if (!result || !result.entities || result.entities.length === 0) {
+      if (!result || !result || result.length === 0) {
         return;
       }
 
@@ -318,12 +324,9 @@ export class OnSaveLogic {
       //    updateRecord(...) returns a PromiseLike<{ entityType: string; id: string }>
       const updatePromises: Array<Xrm.Async.PromiseLike<{ entityType: string; id: string }>> = [];
 
-      for (const record of result.entities) {
+      for (const record of result) {
         // Identify the record ID field. Common patterns might be "esp_buttonadvancedsettingid"
-        const recordId =
-          record["esp_buttonadvancedsettingid"] ||
-          record["esp_ButtonAdvancedSettingId"] ||
-          record["esp_buttonadvancedsettingId"];
+        const recordId = record.esp_buttonadvancedsettingid;
 
         if (!recordId) {
           continue;
@@ -335,6 +338,7 @@ export class OnSaveLogic {
         // If the current record's ShowConfirmationDialog is false => clear fields on the target record
         if (showSyncValue === 0) {
           updateData = {
+            esp_ExecutionMode: 0,
             esp_SyncConfirmationBoxType: null,
             esp_SyncFormNotificationText: null,
             esp_SyncFormNotification: false,
@@ -351,6 +355,7 @@ export class OnSaveLogic {
         // If the current record's ShowConfirmationDialog is true => if any of these fields are empty on the target record, set esp_ModificationNeededFlag to true
         else if (showSyncValue === 1) {
           updateData = {
+            esp_ExecutionMode: 1,
             esp_AsyncFormNotificationText: null,
             esp_AsyncFormNotification: false,
           };
@@ -390,6 +395,9 @@ export class OnSaveLogic {
     const mainButtonAttr = formContext.getAttribute(
       esp_ButtonAdvancedSettingAttributes.esp_MainButtonSetting,
     ) as Xrm.Attributes.LookupAttribute;
+    const languageAttr = formContext.getAttribute(
+      esp_ButtonAdvancedSettingAttributes.esp_SettingLanguage,
+    ) as Xrm.Attributes.LookupAttribute;
 
     if (!boxTypeAttr || !mainButtonAttr) {
       return; // Attributes not found
@@ -398,6 +406,7 @@ export class OnSaveLogic {
     // 2) Get the actual values
     const boxTypeValue = boxTypeAttr.getValue(); // true/false or null
     const mainButtonValue = mainButtonAttr.getValue(); // Array<Xrm.LookupValue> or null
+    const languageValue = languageAttr.getValue();
 
     // 3) Deppending on esp_ExecutionMode, clear the specified fields on the current record
     if (boxTypeValue === 0) {
@@ -424,9 +433,13 @@ export class OnSaveLogic {
     if (!mainButtonValue || mainButtonValue.length === 0 || !mainButtonValue[0].id) {
       return;
     }
+    if (!languageValue || languageValue.length === 0 || !languageValue[0].id) {
+      return;
+    }
 
     // 5) Retrieve all related esp_ButtonAdvancedSetting records that match the same esp_MainButtonSetting
     const targetLookupId = mainButtonValue[0].id.replace(/[{}]/g, ""); // remove braces from GUID
+    const languageId = languageValue[0].id.replace(/[{}]/g, ""); // remove braces from GUID
 
     // Many lookups use a property like "_esp_mainbuttonsetting_value" for the relationship filter
     // You may need quotes around the GUID depending on your environment: eq '${targetLookupId}'
@@ -434,12 +447,10 @@ export class OnSaveLogic {
 
     try {
       // 6) Query related records
-      const result = await Xrm.WebApi.retrieveMultipleRecords(
-        "esp_buttonadvancedsetting",
-        `?$select=esp_SyncConfirmationBoxTitle,esp_SyncConfirmationBoxText,esp_SyncConfirmationBoxConfirmLabel,esp_SyncConfirmationBoxRedirectTitle,esp_SyncConfirmationBoxRedirectText,esp_SyncConfirmationBoxRedirectSubtitle,esp_SyncConfirmationBoxRedirectCancelLabel,esp_SyncConfirmationBoxRedirectConfirmLabel&$filter=${filter}`,
-      );
+      const baseHelper = new BaseHelper();
+      const result = await baseHelper.getAllButtonAdvancedSettingExceptTheGivenLCID(targetLookupId, languageId);
 
-      if (!result || !result.entities || result.entities.length === 0) {
+      if (!result || !result || result.length === 0) {
         return;
       }
 
@@ -447,12 +458,9 @@ export class OnSaveLogic {
       //    updateRecord(...) returns a PromiseLike<{ entityType: string; id: string }>
       const updatePromises: Array<Xrm.Async.PromiseLike<{ entityType: string; id: string }>> = [];
 
-      for (const record of result.entities) {
+      for (const record of result) {
         // Identify the record ID field. Common patterns might be "esp_buttonadvancedsettingid"
-        const recordId =
-          record["esp_buttonadvancedsettingid"] ||
-          record["esp_ButtonAdvancedSettingId"] ||
-          record["esp_buttonadvancedsettingId"];
+        const recordId = record.esp_buttonadvancedsettingid;
 
         if (!recordId) {
           continue;
@@ -464,6 +472,7 @@ export class OnSaveLogic {
         // If the current record's ShowConfirmationDialog is false => clear fields on the target record
         if (boxTypeValue === 0) {
           updateData = {
+            esp_SyncConfirmationBoxType: 0,
             esp_SyncConfirmationBoxRedirectCancelLabel: null,
             esp_SyncConfirmationBoxRedirectConfirmLabel: null,
             esp_SyncConfirmationBoxRedirectSubtitle: null,
@@ -482,6 +491,7 @@ export class OnSaveLogic {
         // If the current record's ShowConfirmationDialog is true => if any of these fields are empty on the target record, set esp_ModificationNeededFlag to true
         else if (boxTypeValue === 1) {
           updateData = {
+            esp_SyncConfirmationBoxType: 1,
             esp_SyncConfirmationBoxTitle: null,
             esp_SyncConfirmationBoxText: null,
             esp_SyncConfirmationBoxConfirmLabel: null,
