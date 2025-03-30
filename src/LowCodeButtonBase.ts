@@ -1,7 +1,7 @@
-import { ButtonRegistrationForm } from "./LowCodeButtonFormBase";
+import { ButtonRegistrationForm } from "./Base_Cases/LowCodeButtonFormBase";
 import { BaseHelper } from "./Helpers/BaseHelper";
 import { ExceptionLowCodeButton } from "./Exceptions/ButtonException";
-import { ButtonRegistrationGrid } from "./LowCodeButtonGridBase";
+import { ButtonRegistrationGrid } from "./Base_Cases/LowCodeButtonGridBase";
 
 export class ButtonRegistration {
   static onClick(context: Xrm.FormContext | Xrm.Controls.GridControl, buttonSettingName: string) {

@@ -2,10 +2,10 @@
 import {
   esp_buttonadvancedsetting_esp_buttonadvancedsetting_esp_executionmode,
   esp_buttonadvancedsetting_esp_buttonadvancedsetting_esp_syncconfirmationboxtype,
-} from "./dataverse-gen";
-import { ExceptionLowCodeButton } from "./Exceptions/ButtonException";
-import { ButtonFormHelper } from "./Helpers/ButtonFormHelper";
-import { ErrorMessageResponse, RedirectResponse } from "./Models/BaseButtonResponseModels";
+} from "../dataverse-gen";
+import { ExceptionLowCodeButton } from "../Exceptions/ButtonException";
+import { ButtonFormHelper } from "../Helpers/ButtonFormHelper";
+import { ErrorMessageResponse, RedirectResponse } from "../Models/BaseButtonResponseModels";
 
 export class ButtonRegistrationForm {
   /**
