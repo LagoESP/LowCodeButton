@@ -312,6 +312,8 @@ export class OnSaveLogic {
       const baseHelper = new BaseHelper();
       const result = await baseHelper.getAllButtonAdvancedSettingExceptTheGivenLCID(targetLookupId, languageId);
 
+      console.log("We are here1: "+result)
+
       if (!result || !result || result.length === 0) {
         return;
       }
@@ -441,6 +443,8 @@ export class OnSaveLogic {
       // 6) Query related records
       const baseHelper = new BaseHelper();
       const result = await baseHelper.getAllButtonAdvancedSettingExceptTheGivenLCID(targetLookupId, languageId);
+
+      console.log("We are here2: "+result)
 
       if (!result || !result || result.length === 0) {
         return;
