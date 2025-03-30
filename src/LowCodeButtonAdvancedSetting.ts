@@ -333,10 +333,10 @@ export class OnSaveLogic {
         // 8) Build the update object
         let updateData: Record<string, unknown> | null = null;
 
-        // If the current record's ShowConfirmationDialog is false => clear fields on the target record
-        if (showSyncValue === 0) {
+        // Modify other languages fields according to current record's sync type
+        if (showSyncValue === 1) {
           updateData = {
-            esp_executionmode: 0,
+            esp_executionmode: 1,
             esp_syncconfirmationboxtype: null,
             esp_syncformnotificationtext: null,
             esp_syncformnotification: false,
@@ -351,9 +351,9 @@ export class OnSaveLogic {
           }
         }
         // If the current record's ShowConfirmationDialog is true => if any of these fields are empty on the target record, set esp_ModificationNeededFlag to true
-        else if (showSyncValue === 1) {
+        else if (showSyncValue === 0) {
           updateData = {
-            esp_executionmode: 1,
+            esp_executionmode: 0,
             esp_asyncformnotificationtext: null,
             esp_asyncformnotification: false,
           };
@@ -500,7 +500,7 @@ export class OnSaveLogic {
 
           const anyEmpty = !cancelLabel || !confirmLabel || !boxSubtitle || !boxText || !boxTitle;
           if (anyEmpty) {
-            updateData.esp_modificationNeededflag = true;
+            updateData.esp_modificationneededflag = true;
           }
         }
 
