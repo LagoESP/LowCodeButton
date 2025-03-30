@@ -257,7 +257,7 @@ export class OnSaveLogic {
         // Optionally, show a success notification or do further processing
       }
     } catch (error: unknown) {
-      console.error("Error in OnSaveLogic for dialog:", error);
+      console.error("Error in OnSaveLogic for dialog: ", error);
     }
   }
   public static async onSaveSyncSections(executionContext: Xrm.Events.EventContext): Promise<void> {
@@ -336,35 +336,35 @@ export class OnSaveLogic {
         // If the current record's ShowConfirmationDialog is false => clear fields on the target record
         if (showSyncValue === 0) {
           updateData = {
-            esp_ExecutionMode: 0,
-            esp_SyncConfirmationBoxType: null,
-            esp_SyncFormNotificationText: null,
-            esp_SyncFormNotification: false,
-            esp_SyncSpinnerText: null,
-            esp_SyncSuccessFormNotificationText: null,
+            esp_executionmode: 0,
+            esp_syncconfirmationboxtype: null,
+            esp_syncformnotificationtext: null,
+            esp_syncformnotification: false,
+            esp_syncspinnertext: null,
+            esp_syncsuccessformnotificationtext: null,
           };
-          const targetText = record["esp_AsyncFormNotificationText"];
+          const targetText = record.esp_AsyncFormNotificationText;
 
           const anyEmpty = !targetText;
           if (anyEmpty) {
-            updateData.esp_ModificationNeededFlag = true;
+            updateData.esp_modificationneededflag = true;
           }
         }
         // If the current record's ShowConfirmationDialog is true => if any of these fields are empty on the target record, set esp_ModificationNeededFlag to true
         else if (showSyncValue === 1) {
           updateData = {
-            esp_ExecutionMode: 1,
-            esp_AsyncFormNotificationText: null,
-            esp_AsyncFormNotification: false,
+            esp_executionmode: 1,
+            esp_asyncformnotificationtext: null,
+            esp_asyncformnotification: false,
           };
-          const targetType = record["esp_SyncConfirmationBoxType"];
-          const targetText = record["esp_SyncFormNotificationText"];
-          const spinnerText = record["esp_SyncSpinnerText"];
-          const successText = record["esp_SyncSuccessFormNotificationText"];
+          const targetType = record.esp_SyncConfirmationBoxType;
+          const targetText = record.esp_SyncFormNotificationText;
+          const spinnerText = record.esp_SyncSpinnerText;
+          const successText = record.esp_SyncSuccessFormNotificationText;
 
           const anyEmpty = !targetType || !targetText || !spinnerText || !successText;
           if (anyEmpty) {
-            updateData.esp_ModificationNeededFlag = true;
+            updateData.esp_modificationneededflag = true;
           }
         }
 
@@ -380,7 +380,7 @@ export class OnSaveLogic {
         // Optionally, show a success notification or do further processing
       }
     } catch (error: unknown) {
-      console.error("Error in OnSaveLogic for sync/async:", error);
+      console.error("Error in OnSaveLogic for sync/async: ", error);
     }
   }
   public static async onSaveBoxSections(executionContext: Xrm.Events.EventContext): Promise<void> {
@@ -406,7 +406,7 @@ export class OnSaveLogic {
     const mainButtonValue = mainButtonAttr.getValue(); // Array<Xrm.LookupValue> or null
     const languageValue = languageAttr.getValue();
 
-    // 3) Deppending on esp_ExecutionMode, clear the specified fields on the current record
+    // 3) Deppending on esp_SyncConfirmationBoxType, clear the specified fields on the current record
     if (boxTypeValue === 0) {
       formContext
         .getAttribute(esp_ButtonAdvancedSettingAttributes.esp_SyncConfirmationBoxRedirectCancelLabel)
@@ -468,39 +468,39 @@ export class OnSaveLogic {
         // If the current record's ShowConfirmationDialog is false => clear fields on the target record
         if (boxTypeValue === 0) {
           updateData = {
-            esp_SyncConfirmationBoxType: 0,
-            esp_SyncConfirmationBoxRedirectCancelLabel: null,
-            esp_SyncConfirmationBoxRedirectConfirmLabel: null,
-            esp_SyncConfirmationBoxRedirectSubtitle: null,
-            esp_SyncConfirmationBoxRedirectText: null,
-            esp_SyncConfirmationBoxRedirectTitle: null,
+            esp_syncconfirmationboxtype: 0,
+            esp_syncconfirmationboxredirectcancellabel: null,
+            esp_syncconfirmationboxredirectconfirmlabel: null,
+            esp_syncconfirmationboxredirectsubtitle: null,
+            esp_syncconfirmationboxredirecttext: null,
+            esp_syncconfirmationboxredirecttitle: null,
           };
-          const CboxTitle = record["esp_SyncConfirmationBoxTitle"];
-          const CboxText = record["esp_SyncConfirmationBoxText"];
-          const CboxLabel = record["esp_SyncConfirmationBoxConfirmLabel"];
+          const CboxTitle = record.esp_SyncConfirmationBoxTitle;
+          const CboxText = record.esp_SyncConfirmationBoxText;
+          const CboxLabel = record.esp_SyncConfirmationBoxConfirmLabel;
 
           const anyEmpty = !CboxTitle || !CboxText || !CboxLabel;
           if (anyEmpty) {
-            updateData.esp_ModificationNeededFlag = true;
+            updateData.esp_modificationneededflag = true;
           }
         }
         // If the current record's ShowConfirmationDialog is true => if any of these fields are empty on the target record, set esp_ModificationNeededFlag to true
         else if (boxTypeValue === 1) {
           updateData = {
-            esp_SyncConfirmationBoxType: 1,
-            esp_SyncConfirmationBoxTitle: null,
-            esp_SyncConfirmationBoxText: null,
-            esp_SyncConfirmationBoxConfirmLabel: null,
+            esp_syncconfirmationboxtype: 1,
+            esp_syncconfirmationboxtitle: null,
+            esp_syncconfirmationboxtext: null,
+            esp_syncconfirmationboxconfirmlabel: null,
           };
-          const cancelLabel = record["esp_SyncConfirmationBoxRedirectCancelLabel"];
-          const confirmLabel = record["esp_SyncConfirmationBoxRedirectConfirmLabel"];
-          const boxSubtitle = record["esp_SyncConfirmationBoxRedirectSubtitle"];
-          const boxText = record["esp_SyncConfirmationBoxRedirectText"];
-          const boxTitle = record["esp_SyncConfirmationBoxRedirectTitle"];
+          const cancelLabel = record.esp_SyncConfirmationBoxRedirectCancelLabel;
+          const confirmLabel = record.esp_SyncConfirmationBoxRedirectConfirmLabel;
+          const boxSubtitle = record.esp_SyncConfirmationBoxRedirectSubtitle;
+          const boxText = record.esp_SyncConfirmationBoxRedirectText;
+          const boxTitle = record.esp_SyncConfirmationBoxRedirectTitle;
 
           const anyEmpty = !cancelLabel || !confirmLabel || !boxSubtitle || !boxText || !boxTitle;
           if (anyEmpty) {
-            updateData.esp_ModificationNeededFlag = true;
+            updateData.esp_modificationNeededflag = true;
           }
         }
 
@@ -516,7 +516,7 @@ export class OnSaveLogic {
         // Optionally, show a success notification or do further processing
       }
     } catch (error: unknown) {
-      console.error("Error in OnSaveLogic for sync/async:", error);
+      console.error("Error in OnSaveLogic for sync confirmation box: ", error);
     }
   }
   //On save functions
