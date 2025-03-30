@@ -65,6 +65,7 @@ export class FormLogic {
     const formContext = executionContext.getFormContext();
 
     const syncField = formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_ExecutionMode);
+    const boxType = formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_SyncConfirmationBoxType);
     if (!syncField) {
       return;
     }
@@ -92,7 +93,8 @@ export class FormLogic {
     } else {
       asyncSection.setVisible(true);
       syncSection.setVisible(false);
-      formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_SyncConfirmationBoxType)?.setValue(null);
+      boxType?.setValue(null);
+      boxType?.fireOnChange();
     }
   }
 
@@ -166,7 +168,7 @@ export class OnSaveLogic {
     if (!showDialogAttr || !mainButtonAttr) {
       return; // Attributes not found
     }
-
+    
     // 2) Get the actual values
     const showDialogValue = showDialogAttr.getValue(); // true/false or null
     const mainButtonValue = mainButtonAttr.getValue(); // Array<Xrm.LookupValue> or null
@@ -256,6 +258,10 @@ export class OnSaveLogic {
         await Promise.all(updatePromises);
         // Optionally, show a success notification or do further processing
       }
+
+      // Asume that a manually saved record is always correct
+      formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_ModificationNeededFlag)?.setValue(false);
+
     } catch (error: unknown) {
       console.error("Error in OnSaveLogic for dialog: ", error);
     }
@@ -293,6 +299,14 @@ export class OnSaveLogic {
       formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_SyncSpinnerText)?.setValue(null);
       formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_SyncSuccessFormNotificationText)?.setValue(null);
       formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_SyncConfirmationBoxType)?.setValue(null);
+      formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_SyncConfirmationBoxConfirmLabel)?.setValue(null);
+      formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_SyncConfirmationBoxText)?.setValue(null);
+      formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_SyncConfirmationBoxTitle)?.setValue(null);
+      formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_SyncConfirmationBoxRedirectCancelLabel)?.setValue(null);
+      formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_SyncConfirmationBoxRedirectConfirmLabel)?.setValue(null);
+      formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_SyncConfirmationBoxRedirectSubtitle)?.setValue(null);
+      formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_SyncConfirmationBoxRedirectText)?.setValue(null);
+      formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_SyncConfirmationBoxRedirectTitle)?.setValue(null);
     }
 
     // 4) Ensure the lookup has a valid ID before fetching related records
@@ -379,6 +393,10 @@ export class OnSaveLogic {
         await Promise.all(updatePromises);
         // Optionally, show a success notification or do further processing
       }
+
+      // Asume that a manually saved record is always correct
+      formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_ModificationNeededFlag)?.setValue(false);
+
     } catch (error: unknown) {
       console.error("Error in OnSaveLogic for sync/async: ", error);
     }
@@ -405,22 +423,14 @@ export class OnSaveLogic {
     const boxTypeValue = boxTypeAttr.getValue(); // true/false or null
     const mainButtonValue = mainButtonAttr.getValue(); // Array<Xrm.LookupValue> or null
     const languageValue = languageAttr.getValue();
-
+    
     // 3) Deppending on esp_SyncConfirmationBoxType, clear the specified fields on the current record
     if (boxTypeValue === 0) {
-      formContext
-        .getAttribute(esp_ButtonAdvancedSettingAttributes.esp_SyncConfirmationBoxRedirectCancelLabel)
-        ?.setValue(null);
-      formContext
-        .getAttribute(esp_ButtonAdvancedSettingAttributes.esp_SyncConfirmationBoxRedirectConfirmLabel)
-        ?.setValue(null);
-      formContext
-        .getAttribute(esp_ButtonAdvancedSettingAttributes.esp_SyncConfirmationBoxRedirectSubtitle)
-        ?.setValue(null);
+      formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_SyncConfirmationBoxRedirectCancelLabel)?.setValue(null);
+      formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_SyncConfirmationBoxRedirectConfirmLabel)?.setValue(null);
+      formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_SyncConfirmationBoxRedirectSubtitle)?.setValue(null);
       formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_SyncConfirmationBoxRedirectText)?.setValue(null);
-      formContext
-        .getAttribute(esp_ButtonAdvancedSettingAttributes.esp_SyncConfirmationBoxRedirectTitle)
-        ?.setValue(null);
+      formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_SyncConfirmationBoxRedirectTitle)?.setValue(null);
     } else if (boxTypeValue === 1) {
       formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_SyncConfirmationBoxConfirmLabel)?.setValue(null);
       formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_SyncConfirmationBoxText)?.setValue(null);
@@ -515,6 +525,10 @@ export class OnSaveLogic {
         await Promise.all(updatePromises);
         // Optionally, show a success notification or do further processing
       }
+
+      // Asume that a manually saved record is always correct
+      formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_ModificationNeededFlag)?.setValue(false);
+
     } catch (error: unknown) {
       console.error("Error in OnSaveLogic for sync confirmation box: ", error);
     }
