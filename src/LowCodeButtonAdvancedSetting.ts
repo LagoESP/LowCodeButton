@@ -31,6 +31,7 @@ export class FormLogic {
       });
     }
   }
+  
   public static toggleDialogSection(executionContext: Xrm.Events.EventContext): void {
     const formContext = executionContext.getFormContext();
 
@@ -151,87 +152,81 @@ export class FormLogic {
 
 // Logic for Form Onsave
 export class OnSaveLogic {
-  public static async onSaveDialogSection(executionContext: Xrm.Events.EventContext): Promise<void> {
+  public static async onSaveFieldUpdates(executionContext: Xrm.Events.EventContext): Promise<void> {
     const formContext = executionContext.getFormContext();
 
     // 1) Retrieve attribute objects via casts
     const showDialogAttr = formContext.getAttribute(
       esp_ButtonAdvancedSettingAttributes.esp_ShowConfirmationDialog,
     ) as Xrm.Attributes.BooleanAttribute;
+    const showSyncAttr = formContext.getAttribute(
+      esp_ButtonAdvancedSettingAttributes.esp_ExecutionMode,
+    ) as Xrm.Attributes.OptionSetAttribute;
+    const boxTypeAttr = formContext.getAttribute(
+      esp_ButtonAdvancedSettingAttributes.esp_SyncConfirmationBoxType,
+    ) as Xrm.Attributes.OptionSetAttribute;
     const mainButtonAttr = formContext.getAttribute(
       esp_ButtonAdvancedSettingAttributes.esp_MainButtonSetting,
     ) as Xrm.Attributes.LookupAttribute;
-    const languageAttr = formContext.getAttribute(
-      esp_ButtonAdvancedSettingAttributes.esp_SettingLanguage,
-    ) as Xrm.Attributes.LookupAttribute;
 
-    if (!showDialogAttr || !mainButtonAttr) {
+    if (!showDialogAttr || !boxTypeAttr || !showSyncAttr || !mainButtonAttr) {
       return; // Attributes not found
     }
-    
-    // 2) Get the actual values
-    const showDialogValue = showDialogAttr.getValue(); // true/false or null
-    const mainButtonValue = mainButtonAttr.getValue(); // Array<Xrm.LookupValue> or null
-    const languageValue = languageAttr.getValue();
 
-    // 3) If esp_ShowConfirmationDialog is false, clear the specified fields on the current record
-    if (showDialogValue === false) {
-      formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_ConfirmationDialogTitle)?.setValue(null);
-      formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_ConfirmationDialogText)?.setValue(null);
-      formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_ConfirmationDialogSubtitle)?.setValue(null);
-      formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_ConfirmationDialogCancelLabel)?.setValue(null);
-      formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_ConfirmationDialogConfirmLabel)?.setValue(null);
-    }
+    // 2) Get the actual values
+    const showDialogValue = showDialogAttr.getValue();
+    const showSyncValue = showSyncAttr.getValue();
+    const boxTypeValue = boxTypeAttr.getValue();
+    const mainButtonValue = mainButtonAttr.getValue(); // Array<Xrm.LookupValue> or null
 
     // 4) Ensure the lookup has a valid ID before fetching related records
     if (!mainButtonValue || mainButtonValue.length === 0 || !mainButtonValue[0].id) {
       return;
     }
-    if (!languageValue || languageValue.length === 0 || !languageValue[0].id) {
-      return;
-    }
 
-    // 5) Retrieve all related esp_ButtonAdvancedSetting records that match the same esp_MainButtonSetting
     const targetLookupId = mainButtonValue[0].id.replace(/[{}]/g, ""); // remove braces from GUID
-    const languageId = languageValue[0].id.replace(/[{}]/g, ""); // remove braces from GUID
+    const currentRecordId = formContext.data.entity.getId().replace(/[{}]/g, "");
 
+    // 5) Retrieve all esp_ButtonAdvancedSetting records that match the same esp_MainButtonSetting
     try {
-      // 6) Query related records
       const baseHelper = new BaseHelper();
-      const result = await baseHelper.getAllButtonAdvancedSettingExceptTheGivenLCID(targetLookupId, languageId);
+      const result = await baseHelper.getAllButtonAdvancedSetting(targetLookupId);
 
       if (!result || result.length === 0) {
         return;
       }
 
-      // 7) Build an array of promises for record updates
+      // 6) Build an array of promises for record updates
       //    updateRecord(...) returns a PromiseLike<{ entityType: string; id: string }>
       const updatePromises: Array<Xrm.Async.PromiseLike<{ entityType: string; id: string }>> = [];
 
       for (const record of result) {
-        // Identify the record ID field. Common patterns might be "esp_buttonadvancedsettingid"
         const recordId = record.esp_buttonadvancedsettingid;
 
         if (!recordId) {
           continue;
         }
 
-        // 8) Build the update object
-        let updateData: Record<string, unknown> | null = null;
+        // 7) Build the update object
+        let updateData: Record<string, unknown> = {};
 
+        // Modification needed flag tracker
+        var needsFlag = false;
+
+        // DIALOG LOGIC
         // If the current record's ShowConfirmationDialog is false => clear fields on the target record
         if (showDialogValue === false) {
-          updateData = {
-            esp_showconfirmationdialog: false,
-            esp_confirmationdialogtitle: null,
-            esp_confirmationdialogtext: null,
-            esp_confirmationdialogsubtitle: null,
-            esp_confirmationdialogcancellabel: null,
-            esp_confirmationdialogconfirmlabel: null,
-          };
+          updateData.esp_showconfirmationdialog = false;
+          updateData.esp_confirmationdialogtitle = null;
+          updateData.esp_confirmationdialogtext = null;
+          updateData.esp_confirmationdialogsubtitle = null;
+          updateData.esp_confirmationdialogcancellabel = null;
+          updateData.esp_confirmationdialogconfirmlabel = null;
         }
         // If the current record's ShowConfirmationDialog is true => if any of these fields are empty on the target record, set esp_ModificationNeededFlag to true
         else if (showDialogValue === true) {
+          updateData.esp_showconfirmationdialog = true;
+
           const targetTitle = record.esp_confirmationdialogtitle;
           const targetText = record.esp_confirmationdialogtext;
           const targetSubtitle = record.esp_confirmationdialogsubtitle;
@@ -240,137 +235,38 @@ export class OnSaveLogic {
 
           const anyEmpty = !targetTitle || !targetText || !targetSubtitle || !targetCancel || !targetConfirm;
           if (anyEmpty) {
-            updateData = {
-              esp_showconfirmationdialog: true,
-              esp_modificationneededflag: true,
-            };
+            needsFlag = true;
           }
         }
 
-        if (updateData) {
-          const updatePromise = Xrm.WebApi.updateRecord("esp_buttonadvancedsetting", recordId, updateData);
-          updatePromises.push(updatePromise);
-        }
-      }
-
-      // 9) Execute all update operations
-      if (updatePromises.length > 0) {
-        await Promise.all(updatePromises);
-        // Optionally, show a success notification or do further processing
-      }
-
-      // Asume that a manually saved record is always correct
-      formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_ModificationNeededFlag)?.setValue(false);
-
-    } catch (error: unknown) {
-      console.error("Error in OnSaveLogic for dialog: ", error);
-    }
-  }
-  public static async onSaveSyncSections(executionContext: Xrm.Events.EventContext): Promise<void> {
-    const formContext = executionContext.getFormContext();
-
-    // 1) Retrieve attribute objects via casts
-    const showSyncAttr = formContext.getAttribute(
-      esp_ButtonAdvancedSettingAttributes.esp_ExecutionMode,
-    ) as Xrm.Attributes.OptionSetAttribute;
-    const mainButtonAttr = formContext.getAttribute(
-      esp_ButtonAdvancedSettingAttributes.esp_MainButtonSetting,
-    ) as Xrm.Attributes.LookupAttribute;
-    const languageAttr = formContext.getAttribute(
-      esp_ButtonAdvancedSettingAttributes.esp_SettingLanguage,
-    ) as Xrm.Attributes.LookupAttribute;
-
-    if (!showSyncAttr || !mainButtonAttr) {
-      return; // Attributes not found
-    }
-
-    // 2) Get the actual values
-    const showSyncValue = showSyncAttr.getValue(); // true/false or null
-    const mainButtonValue = mainButtonAttr.getValue(); // Array<Xrm.LookupValue> or null
-    const languageValue = languageAttr.getValue();
-
-    // 3) Deppending on esp_ExecutionMode, clear the specified fields on the current record
-    if (showSyncValue === 0) {
-      formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_AsyncFormNotificationText)?.setValue(null);
-      formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_AsyncFormNotification)?.setValue(false);
-    } else if (showSyncValue === 1) {
-      formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_SyncFormNotificationText)?.setValue(null);
-      formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_SyncFormNotification)?.setValue(false);
-      formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_SyncSpinnerText)?.setValue(null);
-      formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_SyncSuccessFormNotificationText)?.setValue(null);
-      formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_SyncConfirmationBoxType)?.setValue(null);
-      formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_SyncConfirmationBoxConfirmLabel)?.setValue(null);
-      formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_SyncConfirmationBoxText)?.setValue(null);
-      formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_SyncConfirmationBoxTitle)?.setValue(null);
-      formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_SyncConfirmationBoxRedirectCancelLabel)?.setValue(null);
-      formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_SyncConfirmationBoxRedirectConfirmLabel)?.setValue(null);
-      formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_SyncConfirmationBoxRedirectSubtitle)?.setValue(null);
-      formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_SyncConfirmationBoxRedirectText)?.setValue(null);
-      formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_SyncConfirmationBoxRedirectTitle)?.setValue(null);
-    }
-
-    // 4) Ensure the lookup has a valid ID before fetching related records
-    if (!mainButtonValue || mainButtonValue.length === 0 || !mainButtonValue[0].id) {
-      return;
-    }
-    if (!languageValue || languageValue.length === 0 || !languageValue[0].id) {
-      return;
-    }
-
-    // 5) Retrieve all related esp_ButtonAdvancedSetting records that match the same esp_MainButtonSetting
-    const targetLookupId = mainButtonValue[0].id.replace(/[{}]/g, ""); // remove braces from GUID
-    const languageId = languageValue[0].id.replace(/[{}]/g, ""); // remove braces from GUID
-
-    try {
-      // 6) Query related records
-      const baseHelper = new BaseHelper();
-      const result = await baseHelper.getAllButtonAdvancedSettingExceptTheGivenLCID(targetLookupId, languageId);
-
-      console.log("We are here1: "+result)
-
-      if (!result || !result || result.length === 0) {
-        return;
-      }
-
-      // 7) Build an array of promises for record updates
-      //    updateRecord(...) returns a PromiseLike<{ entityType: string; id: string }>
-      const updatePromises: Array<Xrm.Async.PromiseLike<{ entityType: string; id: string }>> = [];
-
-      for (const record of result) {
-        // Identify the record ID field. Common patterns might be "esp_buttonadvancedsettingid"
-        const recordId = record.esp_buttonadvancedsettingid;
-
-        if (!recordId) {
-          continue;
-        }
-
-        // 8) Build the update object
-        let updateData: Record<string, unknown> | null = null;
-
-        // Modify other languages fields according to current record's sync type
+        // SYNC/ASYNC LOGIC
         if (showSyncValue === 1) {
-          updateData = {
-            esp_executionmode: 1,
-            esp_syncconfirmationboxtype: null,
-            esp_syncformnotificationtext: null,
-            esp_syncformnotification: false,
-            esp_syncspinnertext: null,
-            esp_syncsuccessformnotificationtext: null,
-          };
+          updateData.esp_executionmode = 1;
+          updateData.esp_syncconfirmationboxtype = null;
+          updateData.esp_syncformnotificationtext = null;
+          updateData.esp_syncformnotification = false;
+          updateData.esp_syncspinnertext = null;
+          updateData.esp_syncsuccessformnotificationtext = null;
+          updateData.esp_syncconfirmationboxtitle = null;
+          updateData.esp_syncconfirmationboxtext = null;
+          updateData.esp_syncconfirmationboxconfirmlabel = null;
+          updateData.esp_syncconfirmationboxredirectcancellabel = null;
+          updateData.esp_syncconfirmationboxredirectconfirmlabel = null;
+          updateData.esp_syncconfirmationboxredirectsubtitle = null;
+          updateData.esp_syncconfirmationboxredirecttext = null;
+          updateData.esp_syncconfirmationboxredirecttitle = null;
+
           const targetText = record.esp_AsyncFormNotificationText;
 
           const anyEmpty = !targetText;
           if (anyEmpty) {
-            updateData.esp_modificationneededflag = true;
+            needsFlag = true;
           }
-        }
-        // If the current record's ShowConfirmationDialog is true => if any of these fields are empty on the target record, set esp_ModificationNeededFlag to true
-        else if (showSyncValue === 0) {
-          updateData = {
-            esp_executionmode: 0,
-            esp_asyncformnotificationtext: null,
-            esp_asyncformnotification: false,
-          };
+        } else if (showSyncValue === 0) {
+          updateData.esp_executionmode = 0;
+          updateData.esp_asyncformnotificationtext = null;
+          updateData.esp_asyncformnotification = false;
+
           const targetType = record.esp_SyncConfirmationBoxType;
           const targetText = record.esp_SyncFormNotificationText;
           const spinnerText = record.esp_SyncSpinnerText;
@@ -378,130 +274,33 @@ export class OnSaveLogic {
 
           const anyEmpty = !targetType || !targetText || !spinnerText || !successText;
           if (anyEmpty) {
-            updateData.esp_modificationneededflag = true;
+            needsFlag = true;
           }
         }
 
-        if (updateData) {
-          const updatePromise = Xrm.WebApi.updateRecord("esp_buttonadvancedsetting", recordId, updateData);
-          updatePromises.push(updatePromise);
-        }
-      }
-
-      // 9) Execute all update operations
-      if (updatePromises.length > 0) {
-        await Promise.all(updatePromises);
-        // Optionally, show a success notification or do further processing
-      }
-
-      // Asume that a manually saved record is always correct
-      formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_ModificationNeededFlag)?.setValue(false);
-
-    } catch (error: unknown) {
-      console.error("Error in OnSaveLogic for sync/async: ", error);
-    }
-  }
-  public static async onSaveBoxSections(executionContext: Xrm.Events.EventContext): Promise<void> {
-    const formContext = executionContext.getFormContext();
-
-    // 1) Retrieve attribute objects via casts
-    const boxTypeAttr = formContext.getAttribute(
-      esp_ButtonAdvancedSettingAttributes.esp_SyncConfirmationBoxType,
-    ) as Xrm.Attributes.OptionSetAttribute;
-    const mainButtonAttr = formContext.getAttribute(
-      esp_ButtonAdvancedSettingAttributes.esp_MainButtonSetting,
-    ) as Xrm.Attributes.LookupAttribute;
-    const languageAttr = formContext.getAttribute(
-      esp_ButtonAdvancedSettingAttributes.esp_SettingLanguage,
-    ) as Xrm.Attributes.LookupAttribute;
-
-    if (!boxTypeAttr || !mainButtonAttr) {
-      return; // Attributes not found
-    }
-
-    // 2) Get the actual values
-    const boxTypeValue = boxTypeAttr.getValue(); // true/false or null
-    const mainButtonValue = mainButtonAttr.getValue(); // Array<Xrm.LookupValue> or null
-    const languageValue = languageAttr.getValue();
-    
-    // 3) Deppending on esp_SyncConfirmationBoxType, clear the specified fields on the current record
-    if (boxTypeValue === 0) {
-      formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_SyncConfirmationBoxRedirectCancelLabel)?.setValue(null);
-      formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_SyncConfirmationBoxRedirectConfirmLabel)?.setValue(null);
-      formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_SyncConfirmationBoxRedirectSubtitle)?.setValue(null);
-      formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_SyncConfirmationBoxRedirectText)?.setValue(null);
-      formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_SyncConfirmationBoxRedirectTitle)?.setValue(null);
-    } else if (boxTypeValue === 1) {
-      formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_SyncConfirmationBoxConfirmLabel)?.setValue(null);
-      formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_SyncConfirmationBoxText)?.setValue(null);
-      formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_SyncConfirmationBoxTitle)?.setValue(null);
-    }
-
-    // 4) Ensure the lookup has a valid ID before fetching related records
-    if (!mainButtonValue || mainButtonValue.length === 0 || !mainButtonValue[0].id) {
-      return;
-    }
-    if (!languageValue || languageValue.length === 0 || !languageValue[0].id) {
-      return;
-    }
-
-    // 5) Retrieve all related esp_ButtonAdvancedSetting records that match the same esp_MainButtonSetting
-    const targetLookupId = mainButtonValue[0].id.replace(/[{}]/g, ""); // remove braces from GUID
-    const languageId = languageValue[0].id.replace(/[{}]/g, ""); // remove braces from GUID
-
-    try {
-      // 6) Query related records
-      const baseHelper = new BaseHelper();
-      const result = await baseHelper.getAllButtonAdvancedSettingExceptTheGivenLCID(targetLookupId, languageId);
-
-      console.log("We are here2: "+result)
-
-      if (!result || !result || result.length === 0) {
-        return;
-      }
-
-      // 7) Build an array of promises for record updates
-      //    updateRecord(...) returns a PromiseLike<{ entityType: string; id: string }>
-      const updatePromises: Array<Xrm.Async.PromiseLike<{ entityType: string; id: string }>> = [];
-
-      for (const record of result) {
-        // Identify the record ID field. Common patterns might be "esp_buttonadvancedsettingid"
-        const recordId = record.esp_buttonadvancedsettingid;
-
-        if (!recordId) {
-          continue;
-        }
-
-        // 8) Build the update object
-        let updateData: Record<string, unknown> | null = null;
-
-        // If the current record's ShowConfirmationDialog is false => clear fields on the target record
+        // CONFIRMATION BOX LOGIC
         if (boxTypeValue === 0) {
-          updateData = {
-            esp_syncconfirmationboxtype: 0,
-            esp_syncconfirmationboxredirectcancellabel: null,
-            esp_syncconfirmationboxredirectconfirmlabel: null,
-            esp_syncconfirmationboxredirectsubtitle: null,
-            esp_syncconfirmationboxredirecttext: null,
-            esp_syncconfirmationboxredirecttitle: null,
-          };
+          updateData.esp_syncconfirmationboxtype = 0;
+          updateData.esp_syncconfirmationboxredirectcancellabel = null;
+          updateData.esp_syncconfirmationboxredirectconfirmlabel = null;
+          updateData.esp_syncconfirmationboxredirectsubtitle = null;
+          updateData.esp_syncconfirmationboxredirecttext = null;
+          updateData.esp_syncconfirmationboxredirecttitle = null;
+
           const CboxTitle = record.esp_SyncConfirmationBoxTitle;
           const CboxText = record.esp_SyncConfirmationBoxText;
           const CboxLabel = record.esp_SyncConfirmationBoxConfirmLabel;
 
           const anyEmpty = !CboxTitle || !CboxText || !CboxLabel;
           if (anyEmpty) {
-            updateData.esp_modificationneededflag = true;
+            needsFlag = true;
           }
-        }
-        // If the current record's ShowConfirmationDialog is true => if any of these fields are empty on the target record, set esp_ModificationNeededFlag to true
-        else if (boxTypeValue === 1) {
-          updateData = {
-            esp_syncconfirmationboxtype: 1,
-            esp_syncconfirmationboxtitle: null,
-            esp_syncconfirmationboxtext: null,
-            esp_syncconfirmationboxconfirmlabel: null,
-          };
+        } else if (boxTypeValue === 1) {
+          updateData.esp_syncconfirmationboxtype = 1;
+          updateData.esp_syncconfirmationboxtitle = null;
+          updateData.esp_syncconfirmationboxtext = null;
+          updateData.esp_syncconfirmationboxconfirmlabel = null;
+
           const cancelLabel = record.esp_SyncConfirmationBoxRedirectCancelLabel;
           const confirmLabel = record.esp_SyncConfirmationBoxRedirectConfirmLabel;
           const boxSubtitle = record.esp_SyncConfirmationBoxRedirectSubtitle;
@@ -510,8 +309,15 @@ export class OnSaveLogic {
 
           const anyEmpty = !cancelLabel || !confirmLabel || !boxSubtitle || !boxText || !boxTitle;
           if (anyEmpty) {
-            updateData.esp_modificationneededflag = true;
+            needsFlag = true;
           }
+        }
+
+        // Flag record or not
+        if (!needsFlag || recordId.toLowerCase() == currentRecordId.toLowerCase()) {
+          updateData.esp_modificationneededflag = false;
+        } else {
+          updateData.esp_modificationneededflag = true;
         }
 
         if (updateData) {
@@ -520,23 +326,18 @@ export class OnSaveLogic {
         }
       }
 
-      // 9) Execute all update operations
+      // 8) Execute all update operations
       if (updatePromises.length > 0) {
         await Promise.all(updatePromises);
-        // Optionally, show a success notification or do further processing
+        formContext.data.refresh(true);
       }
-
-      // Asume that a manually saved record is always correct
-      formContext.getAttribute(esp_ButtonAdvancedSettingAttributes.esp_ModificationNeededFlag)?.setValue(false);
-
     } catch (error: unknown) {
-      console.error("Error in OnSaveLogic for sync confirmation box: ", error);
+      console.error("Error in OnSaveLogic: ", error);
     }
   }
+
   //On save functions
   public static onSave(executionContext: Xrm.Events.EventContext): void {
-    OnSaveLogic.onSaveDialogSection(executionContext);
-    OnSaveLogic.onSaveBoxSections(executionContext);
-    OnSaveLogic.onSaveSyncSections(executionContext);
+    OnSaveLogic.onSaveFieldUpdates(executionContext);
   }
 }
